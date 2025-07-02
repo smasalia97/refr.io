@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="bg-slate-50">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +22,7 @@
                         },
                         emerald: {
                             400: '#34D399',
+                            500: '#10B981',
                             700: '#047857',
                             900: '#064E3B',
                         },
@@ -28,9 +30,11 @@
                             50: '#F9FAFB',
                             200: '#E5E7EB',
                             300: '#D1D5DB',
+                            400: '#9CA3AF',
                         },
                         gray: {
                             500: '#6B7280',
+                            700: '#374151',
                             900: '#111827',
                         }
                     }
@@ -39,12 +43,14 @@
         }
     </script>
 </head>
+
 <body class="antialiased text-gray-800">
 
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-5xl mx-auto py-4 px-4 md:px-8 flex justify-between items-center">
             <a href="index.html" class="text-2xl font-bold text-brand-green">refr.io</a>
-            <a href="post.html" class="bg-brand-green text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-emerald-700 transition duration-200 ease-in-out hover:-translate-y-px transform min-h-[40px] flex items-center">
+            <a href="post.html"
+                class="bg-brand-green text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-emerald-700 transition duration-200 ease-in-out hover:-translate-y-px transform min-h-[40px] flex items-center">
                 + Post Referral
             </a>
         </div>
@@ -58,33 +64,47 @@
             <form action="#" method="POST" class="space-y-6">
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" name="title" id="title" placeholder="e.g., Chase Sapphire Preferred" class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm min-h-[40px]">
+                    <input type="text" name="title" id="title" placeholder="e.g., Chase Sapphire Preferred"
+                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out">
                 </div>
 
                 <div>
                     <label for="link" class="block text-sm font-medium text-gray-700">Referral Link</label>
-                    <input type="url" name="link" id="link" placeholder="https://www.referral.com/..." class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm min-h-[40px]">
-                </div>
-                
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea name="description" id="description" rows="4" placeholder="Briefly describe the offer..." class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"></textarea>
+                    <input type="url" name="link" id="link" placeholder="https://www.referral.com/..."
+                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out">
                 </div>
 
                 <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                    <select id="category" name="category" class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm min-h-[40px]">
-                        <option>Credit Card</option>
-                        <option>Food</option>
-                        <option>Shopping</option>
-                        <option>Travel</option>
-                        <option>Services</option>
-                        <option>Other</option>
-                    </select>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="4" placeholder="Briefly describe the offer..."
+                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm transition duration-200 ease-in-out"></textarea>
                 </div>
-                
+
+                <!-- Styled Dropdown with Enhanced Focus -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <div class="mt-1 relative">
+                        <select id="category" name="category"
+                            class="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] pr-10 transition duration-200 ease-in-out">
+                            <option>Credit Card</option>
+                            <option>Food</option>
+                            <option>Shopping</option>
+                            <option>Travel</option>
+                            <option>Services</option>
+                            <option>Other</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="pt-2">
-                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
+                    <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
                         Submit Referral
                     </button>
                 </div>
@@ -94,4 +114,5 @@
     </main>
 
 </body>
+
 </html>

@@ -1,0 +1,25 @@
+# Node modules
+/node_modules/
+
+# Local SQLite database file
+/db/refr.db
+
+# Compiled Tailwind output (auto-generated)
+/public/style.css
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE/editor config
+.vscode/
+*.code-workspace
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables (for future secret config)
+.env
+.env.*

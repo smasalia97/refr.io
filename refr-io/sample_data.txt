@@ -1,0 +1,37 @@
+Sample Referrals
+
+1. Title: Get $100 with Discover It Credit Card
+   Link: https://refer.discover.com/s/saiyam123
+   Description: Both get $100 after your first purchase. No annual fee.
+   Category: Credit Card
+
+---
+
+2. Title: Free $15 on DoorDash
+   Link: https://drd.sh/s/referral123
+   Description: Use this referral for $15 off your first 3 orders.
+   Category: Food
+
+---
+
+3. Title: Rakuten $30 Cashback Bonus
+   Link: https://www.rakuten.com/r/SAIYAM123
+   Description: Sign up and spend $30 to get a $30 cashback bonus.
+   Category: Shopping
+
+---
+
+4. Title: Get $25 Airbnb Credit
+   Link: https://www.airbnb.com/c/saiyamm
+   Description: Earn travel credits on your first Airbnb stay.
+   Category: Travel
+
+---
+
+5. Title: Notion Referral – 3 Months Free Pro Plan
+   Link: https://notion.so/ref/saiyamtools
+   Description: Great for productivity and docs. No credit card required.
+   Category: Services
+
+---
+

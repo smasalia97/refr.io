@@ -1,0 +1,7 @@
+[] Signup - Name
+[] Signup - Show Password
+[] index.html - add name on ref card top
+[] user_profile page generate
+[] decoupling for deployment
+[] UI adjustments
+[] auth

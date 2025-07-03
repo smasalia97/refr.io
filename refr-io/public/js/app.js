@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
   const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 
+  const API_URL = "http://localhost:3000";
+
   // --- State ---
   let referralToDelete = { id: null, element: null };
 
@@ -67,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fetchAndRenderReferrals = async () => {
     try {
-      const response = await fetch("/api/referrals");
+      const response = await fetch(`${API_URL}/api/referrals`);
       if (!response.ok) throw new Error("Network response was not ok");
 
       const result = await response.json();
@@ -108,9 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!referralToDelete.id) return;
 
     try {
-      const response = await fetch(`/api/referrals/${referralToDelete.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/api/referrals/${referralToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (response.ok) {
         referralToDelete.element.remove();

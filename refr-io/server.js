@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const Database = require("better-sqlite3");
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,8 +25,12 @@ db.exec(`
 `);
 
 // --- Middleware ---
-app.use(express.json()); // To parse JSON request bodies
-app.use(express.static(path.join(__dirname, "public"))); // To serve static files
+// 2. Use cors middleware
+// This allows requests from any origin, which is fine for local development.
+// For production, you should restrict it to your frontend's domain for security.
+// Example: app.use(cors({ origin: 'https://your-live-frontend.com' }));
+app.use(cors()); 
+app.use(express.json());
 
 // --- API Routes ---
 
@@ -90,10 +95,9 @@ app.delete("/api/referrals/:id", (req, res) => {
   }
 });
 
-// --- Fallback Route ---
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+// 3. REMOVE the static file server and fallback route
+// app.use(express.static(path.join(__dirname, 'public')));
+// app.get('*', (req, res) => { /* ... */ });
 
 // --- Start Server ---
 app.listen(PORT, () => {

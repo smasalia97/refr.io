@@ -6,12 +6,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
   const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 
-  const API_URL = "http://localhost:3000";
+  // Header views
+  const loggedOutView = document.getElementById("logged-out-view");
+  const loggedInView = document.getElementById("logged-in-view");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const API_URL = "http://localhost:3000"; // Define the backend server URL
+  const accessToken = localStorage.getItem("accessToken");
 
   // --- State ---
   let referralToDelete = { id: null, element: null };
 
   // --- Functions ---
+
+  /**
+   * Toggles header buttons based on login status.
+   */
+  const updateHeader = () => {
+    if (accessToken) {
+      loggedOutView.classList.add("hidden");
+      loggedInView.classList.remove("hidden");
+    } else {
+      loggedOutView.classList.remove("hidden");
+      loggedInView.classList.add("hidden");
+    }
+  };
+
+  /**
+   * Handles user logout.
+   */
+  const handleLogout = () => {
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("idToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = FRONTEND_URL || "/";
+      });
+    }
+  };
 
   /**
    * Returns the appropriate Tailwind CSS classes for a given category.
@@ -20,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {string} category The category of the referral.
    * @returns {string} A string of Tailwind classes.
    */
+
   const getCategoryClasses = (category) => {
     switch (category) {
       case "Credit Card":
@@ -68,9 +102,26 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const fetchAndRenderReferrals = async () => {
+    if (!accessToken) {
+      loadingMessage.textContent = "Please log in to see referrals.";
+      return;
+    }
+
+    console.log("Sending access token:");
     try {
-      const response = await fetch(`${API_URL}/api/referrals`);
-      if (!response.ok) throw new Error("Network response was not ok");
+      const response = await fetch(`${API_URL}/api/referrals`, {
+        headers: {
+          // Send the token to the protected API route
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please log in again.");
+        }
+        throw new Error("Network response was not ok");
+      }
 
       const result = await response.json();
       const referrals = result.data;
@@ -91,8 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Error fetching referrals:", error);
-      if (loadingMessage)
-        loadingMessage.textContent = "Failed to load referrals.";
+      if (loadingMessage) loadingMessage.textContent = error.message;
     }
   };
 
@@ -107,13 +157,17 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const handleDelete = async () => {
-    if (!referralToDelete.id) return;
+    if (!referralToDelete.id || !accessToken) return;
 
     try {
       const response = await fetch(
         `${API_URL}/api/referrals/${referralToDelete.id}`,
         {
           method: "DELETE",
+          headers: {
+            // Add the Authorization header
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
       );
 
@@ -158,5 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
   cancelDeleteBtn.addEventListener("click", closeDeleteModal);
 
   // --- Initial Load ---
+  updateHeader();
+  handleLogout();
   fetchAndRenderReferrals();
 });

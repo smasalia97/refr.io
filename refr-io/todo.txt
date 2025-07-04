@@ -2,6 +2,9 @@
 [] Signup - Show Password
 [] index.html - add name on ref card top
 [] user_profile page generate
-[] decoupling for deployment
+[-] decoupling for deployment
 [] UI adjustments
-[] auth
+[-] auth
+[] logout/post ref changes
+[] Welcome {name} on index top
+[] 

@@ -1,9 +1,3 @@
-/**
- * Script for the post.html page.
- * Handles form submission for new referrals.
- */
-const API_URL = "http://localhost:3000";
-
 document.addEventListener("DOMContentLoaded", () => {
   const postForm = document.getElementById("post-form");
   const messageEl = document.getElementById("form-message");
@@ -12,6 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   postForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      messageEl.textContent = "You must be logged in to post a referral.";
+      messageEl.className = "text-red-600 text-center mt-4";
+      return;
+    }
 
     const formData = new FormData(postForm);
     const referralData = Object.fromEntries(formData.entries());
@@ -22,7 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(`${API_URL}/api/referrals`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Add the Authorization header with the token
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(referralData),
       });
 
@@ -31,7 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "Referral submitted successfully! Redirecting...";
         messageEl.classList.add("text-green-600");
         setTimeout(() => {
-          window.location.href = "http://127.0.0.1:8080"; // Redirect to the homepage
+          // Use the FRONTEND_URL for a reliable redirect
+          window.location.href = FRONTEND_URL;
         }, 2000);
       } else {
         const errorData = await response.json();

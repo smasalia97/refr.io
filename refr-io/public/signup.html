@@ -21,7 +21,6 @@
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-5xl mx-auto py-4 px-4 md:px-8 flex justify-between items-center">
             <a href="/" class="text-2xl font-bold text-brand-green">refr.io</a>
-            <!-- Header for a logged-out user -->
             <div class="flex items-center gap-4">
                 <a href="login.html"
                     class="font-semibold text-gray-600 hover:text-brand-green transition-colors">Login</a>
@@ -35,37 +34,55 @@
 
     <main class="max-w-5xl mx-auto p-4 md:p-8 mt-10">
         <div class="max-w-md mx-auto bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm">
-            <h1 class="text-2xl font-semibold text-gray-900 text-center">Create an Account</h1>
-            <p class="text-center text-gray-500 mt-2">Join to share and find the best referrals.</p>
+            <h1 id="form-title" class="text-2xl font-semibold text-gray-900 text-center">Create an Account</h1>
+            <p id="form-subtitle" class="text-center text-gray-500 mt-2">Join to share and find the best referrals.</p>
 
             <form id="signup-form" class="space-y-6 mt-8">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" name="email" id="email" autocomplete="email" placeholder="you@example.com"
-                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
-                        required>
+                <div id="initial-signup-fields">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" name="email" id="email" autocomplete="email" placeholder="you@example.com"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
+                            required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" name="password" id="password" autocomplete="new-password"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
+                            required>
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm
+                            Password</label>
+                        <input type="password" name="confirm-password" id="confirm-password" autocomplete="new-password"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
+                            required>
+                    </div>
                 </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" name="password" id="password" autocomplete="new-password"
-                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
-                        required>
-                </div>
-                <div>
-                    <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm
-                        Password</label>
-                    <input type="password" name="confirm-password" id="confirm-password" autocomplete="new-password"
-                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
-                        required>
+
+                <div id="confirmation-fields" class="hidden">
+                    <div>
+                        <label for="confirmation-code" class="block text-sm font-medium text-gray-700">Confirmation
+                            Code</label>
+                        <input type="text" name="confirmation-code" id="confirmation-code"
+                            placeholder="Enter the code from your email"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out">
+                    </div>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit"
+                    <button id="signup-btn" type="submit"
                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
                         Create Account
                     </button>
+                    <button id="confirm-btn" type="button"
+                        class="hidden w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
+                        Confirm Account
+                    </button>
                 </div>
             </form>
+
+            <p id="form-message" class="text-center mt-4"></p>
 
             <p class="text-center text-sm text-gray-500 mt-8">
                 Already have an account?
@@ -73,7 +90,8 @@
             </p>
         </div>
     </main>
-
+    <script src="js/config.js"></script>
+    <script src="js/signup.js" defer></script>
 </body>
 
 </html>

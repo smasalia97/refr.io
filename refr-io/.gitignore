@@ -11,10 +11,6 @@
 .DS_Store
 Thumbs.db
 
-# IDE/editor config
-.vscode/
-*.code-workspace
-
 # npm logs
 npm-debug.log*
 yarn-debug.log*
@@ -23,3 +19,5 @@ yarn-error.log*
 # Environment variables (for future secret config)
 .env
 .env.*
+
+todo.txt

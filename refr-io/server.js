@@ -4,21 +4,22 @@ const express = require("express");
 const path = require("path");
 const Database = require("better-sqlite3");
 const cors = require("cors");
-const {
-  CognitoIdentityProviderClient,
-  SignUpCommand,
-  ConfirmSignUpCommand,
-  InitiateAuthCommand,
-} = require("@aws-sdk/client-cognito-identity-provider");
+// const {
+//   CognitoIdentityProviderClient,
+//   SignUpCommand,
+//   ConfirmSignUpCommand,
+//   InitiateAuthCommand,
+// } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- Cognito Client ---
-const cognitoClient = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION,
-});
+const { CognitoIdentityProviderClient, SignUpCommand, ConfirmSignUpCommand, InitiateAuthCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { cognitoConfig } = require("./aws-config.js");
+
+const client = new CognitoIdentityProviderClient({ region: cognitoConfig.region });
+
 
 // --- Database Setup ---
 const dbPath = path.resolve(__dirname, "db", "refr.db");
@@ -66,79 +67,88 @@ const calculateSecretHash = (username) => {
 app.post("/api/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  const params = {
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email,
-    Password: password,
-    SecretHash: calculateSecretHash(email),
-    UserAttributes: [{ Name: "email", Value: email }],
-  };
-
-  try {
-    const command = new SignUpCommand(params);
-    await cognitoClient.send(command);
-    res.status(200).json({
-      message:
-        "User registered. Please check your email for a verification code.",
+  const command = new SignUpCommand({
+        ClientId: cognitoConfig.clientId,
+        Username: email,
+        Password: password,
+        UserAttributes: [
+            {
+                Name: "email",
+                Value: email,
+            },
+        ],
     });
-  } catch (error) {
-    console.error("Cognito SignUp Error:", error);
-    res.status(400).json({ error: error.message });
-  }
+
+    try {
+        const { UserSub } = await client.send(command);
+        res.status(200).json({ message: "User created successfully. Please check your email for the confirmation code.", userId: UserSub });
+    } catch (error) {
+      console.error("Signup error:", error);
+        res.status(400).json({ error: error.message });
+    }
 });
 
 // POST /api/confirm-signup - Confirm user registration
 app.post("/api/confirm-signup", async (req, res) => {
   const { email, confirmationCode } = req.body;
 
-  const params = {
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    Username: email,
-    ConfirmationCode: confirmationCode,
-    SecretHash: calculateSecretHash(email),
-  };
+  const command = new ConfirmSignUpCommand({
+        ClientId: cognitoConfig.clientId,
+        Username: email,
+        ConfirmationCode: confirmationCode,
+    });
 
-  try {
-    const command = new ConfirmSignUpCommand(params);
-    await cognitoClient.send(command);
-    res.status(200).json({ message: "User confirmed successfully." });
-  } catch (error) {
-    console.error("Cognito ConfirmSignUp Error:", error);
-    res.status(400).json({ error: error.message });
-  }
+    try {
+        await client.send(command);
+        res.status(200).json({ message: "Account confirmed successfully." });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 // In server.js
 
 // POST /api/login - User login
 app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { username, srpA } = req.body;
 
-  const params = {
-    AuthFlow: "USER_PASSWORD_AUTH",
-    ClientId: process.env.COGNITO_CLIENT_ID,
-    AuthParameters: {
-      USERNAME: email,
-      PASSWORD: password,
-      // --- Move the SecretHash inside this object ---
-      SECRET_HASH: calculateSecretHash(email),
-    },
-    // --- Remove it from here ---
-    // SecretHash: calculateSecretHash(email),
-  };
+    const command = new InitiateAuthCommand({
+        AuthFlow: "USER_SRP_AUTH",
+        ClientId: cognitoConfig.clientId,
+        AuthParameters: {
+            USERNAME: username,
+            SRP_A: srpA,
+        },
+    });
 
-  console.log("\n--- Login API Call (New Structure) ---");
-  console.log("Sending params to Cognito:", JSON.stringify(params, null, 2));
-
-  try {
-    const command = new InitiateAuthCommand(params);
-    const { AuthenticationResult } = await cognitoClient.send(command);
-    res.status(200).json(AuthenticationResult);
-  } catch (error) {
-    console.error("Cognito InitiateAuth Error:", error);
-    res.status(400).json({ error: error.message || "Login failed" });
-  }
+    try {
+        const response = await client.send(command);
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
+
+exports.respondToChallenge = async (req, res) => {
+    const { username, challengeResponses, session } = req.body;
+
+    const command = new RespondToAuthChallengeCommand({
+        ClientId: cognitoConfig.clientId,
+        ChallengeName: "PASSWORD_VERIFIER",
+        Session: session,
+        ChallengeResponses: {
+            USERNAME: username,
+            ...challengeResponses,
+        },
+    });
+
+    try {
+        const { AuthenticationResult } = await client.send(command);
+        res.status(200).json(AuthenticationResult);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 
 // --- Protected Referral Routes ---
 

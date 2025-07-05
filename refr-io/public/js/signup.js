@@ -1,7 +1,10 @@
+import { CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js';
+
 document.addEventListener("DOMContentLoaded", () => {
 //   const API_URL = "http://localhost:3000"; // Define the backend server URL
+  
 
-  const signupForm = document.getElementById("signup-form");
+const signupForm = document.getElementById("signup-form");
   const formMessage = document.getElementById("form-message");
 
   // Form sections
@@ -46,13 +49,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(`${API_URL}/api/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: emailField.value,
-          password: passwordField.value,
-        }),
-      });
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailField.value, password: passwordField.value }),
+            });
 
       const result = await response.json();
 
@@ -93,10 +93,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(`${API_URL}/api/confirm-signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, confirmationCode }),
-      });
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userEmail, confirmationCode }),
+            });
 
       const result = await response.json();
 

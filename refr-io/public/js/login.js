@@ -15,19 +15,19 @@ document.addEventListener("DOMContentLoaded", () => {
             UserPoolId: cognitoConfig.UserPoolId,
             ClientId: cognitoConfig.ClientId,
         };
-        const userPool = new CognitoUserPool(poolData);
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
         const authenticationData = {
             Username: email,
             Password: password,
         };
-        const authenticationDetails = new AuthenticationDetails(authenticationData);
+        const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
 
         const userData = {
             Username: email,
             Pool: userPool,
         };
-        const cognitoUser = new CognitoUser(userData);
+        const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
 
         cognitoUser.authenticateUser(authenticationDetails, {
             onSuccess: (result) => {
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem("idToken", idToken);
                 localStorage.setItem("refreshToken", refreshToken);
 
-                window.location.href = "/";
+                window.location.href = "http://localhost:8080/";
             },
             onFailure: (err) => {
                 formMessage.textContent = err.message || JSON.stringify(err);

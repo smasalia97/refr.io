@@ -1,7 +1,7 @@
-import { CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js';
+
 
 document.addEventListener("DOMContentLoaded", () => {
-//   const API_URL = "http://localhost:3000"; // Define the backend server URL
+const API_URL = "http://localhost:3000"; // Define the backend server URL
   
 
 const signupForm = document.getElementById("signup-form");
@@ -48,6 +48,7 @@ const signupForm = document.getElementById("signup-form");
     }
 
     try {
+      console.log("Sending signup request to backend...");
       const response = await fetch(`${API_URL}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -92,13 +93,15 @@ const signupForm = document.getElementById("signup-form");
     }
 
     try {
+      console.log("Sending confirmation request to backend...");
       const response = await fetch(`${API_URL}/api/confirm-signup`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: userEmail, confirmationCode }),
-            });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail, confirmationCode: confirmationCode }),
+      });
 
       const result = await response.json();
+      console.log("Confirmation response:", result);
 
       if (response.ok) {
         formMessage.textContent = "Success! Redirecting you to login...";

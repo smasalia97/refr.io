@@ -3,5 +3,5 @@ const API_URL = "http://localhost:3000"; // Your backend URL
 
 const cognitoConfig = {
     UserPoolId: "us-west-2_7oSwoCpTy",
-    ClientId: "29n0s20o4anapk1n12q81f3g56",
+    ClientId: "mmg30pbb4p2c0p4rtn7s1gfsp",
 };

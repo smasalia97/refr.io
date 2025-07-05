@@ -4,19 +4,19 @@ const express = require("express");
 const path = require("path");
 const Database = require("better-sqlite3");
 const cors = require("cors");
-const {
-  CognitoIdentityProviderClient,
-  SignUpCommand,
-  ConfirmSignUpCommand,
-  InitiateAuthCommand,
-} = require("@aws-sdk/client-cognito-identity-provider");
+// const {
+//   CognitoIdentityProviderClient,
+//   SignUpCommand,
+//   ConfirmSignUpCommand,
+//   InitiateAuthCommand,
+// } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-import { CognitoIdentityProviderClient, SignUpCommand } from "@aws-sdk/client-cognito-identity-provider";
-import { cognitoConfig } from "./aws-config.js";
+const { CognitoIdentityProviderClient, SignUpCommand, ConfirmSignUpCommand, InitiateAuthCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { cognitoConfig } = require("./aws-config.js");
 
 const client = new CognitoIdentityProviderClient({ region: cognitoConfig.region });
 
@@ -83,6 +83,7 @@ app.post("/api/signup", async (req, res) => {
         const { UserSub } = await client.send(command);
         res.status(200).json({ message: "User created successfully. Please check your email for the confirmation code.", userId: UserSub });
     } catch (error) {
+      console.error("Signup error:", error);
         res.status(400).json({ error: error.message });
     }
 });
@@ -128,7 +129,7 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-export const respondToChallenge = async (req, res) => {
+exports.respondToChallenge = async (req, res) => {
     const { username, challengeResponses, session } = req.body;
 
     const command = new RespondToAuthChallengeCommand({

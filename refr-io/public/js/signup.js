@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-//   const API_URL = "http://localhost:3000"; // Define the backend server URL
+  //   const API_URL = "http://localhost:3000"; // Define the backend server URL
 
   const signupForm = document.getElementById("signup-form");
   const formMessage = document.getElementById("form-message");
@@ -9,10 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmationFields = document.getElementById("confirmation-fields");
 
   // Inputs
+  const nameField = document.getElementById("name");
   const emailField = document.getElementById("email");
   const passwordField = document.getElementById("password");
   const confirmPasswordField = document.getElementById("confirm-password");
   const confirmationCodeField = document.getElementById("confirmation-code");
+  const showPasswordCheckbox = document.getElementById("show-password");
 
   // Buttons and Text
   const signupBtn = document.getElementById("signup-btn");
@@ -23,16 +25,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // We'll store the email here after the first step
   let userEmail = "";
 
+  // --- Event Listener for Show Password ---
+  showPasswordCheckbox.addEventListener("change", () => {
+    const isChecked = showPasswordCheckbox.checked;
+    passwordField.type = isChecked ? "text" : "password";
+    confirmPasswordField.type = isChecked ? "text" : "password";
+  });
+
   // --- Event Listener for Initial Signup ---
   signupBtn.addEventListener("click", async (event) => {
     event.preventDefault();
     formMessage.textContent = "";
 
+    const name = nameField.value;
     const email = emailField.value;
     const password = passwordField.value;
     const confirmPassword = confirmPasswordField.value;
 
-    if (!email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       formMessage.textContent = "Please fill out all fields.";
       formMessage.className = "text-red-600 text-center mt-4";
       return;
@@ -49,8 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: emailField.value,
-          password: passwordField.value,
+          name: name,
+          email: email,
+          password: password,
         }),
       });
 

@@ -4,6 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const loginForm = document.getElementById("login-form");
   const formMessage = document.getElementById("form-message");
+  const passwordField = document.getElementById("password");
+  const showPasswordCheckbox = document.getElementById("show-password");
+
+  showPasswordCheckbox.addEventListener("change", () => {
+    passwordField.type = showPasswordCheckbox.checked ? "text" : "password";
+  });
 
   if (loginForm) {
     loginForm.addEventListener("submit", async (event) => {
@@ -35,8 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Login successful, tokens stored:", {
             accessToken: result.AccessToken,
           });
-          // Redirect to the homepage after successful login
-          window.location.href = FRONTEND_URL;
+          localStorage.setItem("username", email); // Store username for token refresh
+          // Redirect to the dashboard after successful login
+          window.location.href = "/dashboard.html";
         } else {
           throw new Error(result.error || "Login failed");
         }

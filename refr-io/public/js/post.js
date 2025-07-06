@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add the Authorization header with the token
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(referralData),
@@ -36,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "Referral submitted successfully! Redirecting...";
         messageEl.classList.add("text-green-600");
         setTimeout(() => {
-          // Use the FRONTEND_URL for a reliable redirect
-          window.location.href = FRONTEND_URL;
+          // Redirect to the dashboard, not the landing page
+          window.location.href = "/dashboard.html";
         }, 2000);
       } else {
         const errorData = await response.json();

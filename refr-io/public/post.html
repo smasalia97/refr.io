@@ -20,10 +20,15 @@
 
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-5xl mx-auto py-4 px-4 md:px-8 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-brand-green">refr.io</a>
-            <a href="post.html"
-                class="bg-brand-green text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-emerald-700 transition duration-200 ease-in-out hover:-translate-y-px transform min-h-[40px] flex items-center">
-                + Post Referral
+            <a href="/dashboard.html" class="text-2xl font-bold text-brand-green">refr.io</a>
+            <a href="/dashboard.html"
+                class="font-semibold text-gray-600 hover:text-brand-green transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                        clip-rule="evenodd" />
+                </svg>
+                Back to Dashboard
             </a>
         </div>
     </header>
@@ -32,7 +37,6 @@
         <h1 class="text-xl font-semibold text-gray-900 mt-2 mb-6 text-center">Post a New Referral</h1>
 
         <div class="max-w-xl mx-auto bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm">
-            <!-- The form now has an ID and no `action` or `method` attributes -->
             <form id="post-form" class="space-y-6">
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Title</label>

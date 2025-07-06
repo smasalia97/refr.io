@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.840.0",
+    "aws-amplify": "^6.15.3",
     "aws-jwt-verify": "^5.1.0",
     "better-sqlite3": "^11.10.0",
     "cors": "^2.8.5",

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  //   const API_URL = "http://localhost:3000"; // Define the backend server URL
+  const API_URL = "http://localhost:3000"; // Define the backend server URL
 
   const signupForm = document.getElementById("signup-form");
   const formMessage = document.getElementById("form-message");
@@ -26,11 +26,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let userEmail = "";
 
   // --- Event Listener for Show Password ---
-  showPasswordCheckbox.addEventListener("change", () => {
-    const isChecked = showPasswordCheckbox.checked;
-    passwordField.type = isChecked ? "text" : "password";
-    confirmPasswordField.type = isChecked ? "text" : "password";
-  });
+  if (showPasswordCheckbox) {
+    showPasswordCheckbox.addEventListener("change", () => {
+      const isChecked = showPasswordCheckbox.checked;
+      passwordField.type = isChecked ? "text" : "password";
+      confirmPasswordField.type = isChecked ? "text" : "password";
+    });
+  }
 
   // --- Event Listener for Initial Signup ---
   signupBtn.addEventListener("click", async (event) => {
@@ -106,7 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(`${API_URL}/api/confirm-signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, confirmationCode }),
+        body: JSON.stringify({
+          email: userEmail,
+          confirmationCode: confirmationCode,
+        }),
       });
 
       const result = await response.json();

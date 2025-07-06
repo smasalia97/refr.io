@@ -1,9 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const referralsList = document.getElementById("referrals-list");
   const loadingMessage = document.getElementById("loading-message");
-  const deleteModal = document.getElementById("delete-modal");
-  const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
-  const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
   const welcomeMessage = document.getElementById("welcome-message");
   const postReferralLink = document.getElementById("post-referral-link");
   const loggedOutView = document.getElementById("logged-out-view");
@@ -15,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_URL = "http://localhost:3000";
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
-  let referralToDelete = { id: null, element: null };
 
   const updateHeader = () => {
     if (currentUser) {
@@ -82,10 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const userNameHTML = ref.user_name
       ? `<div class="text-sm font-semibold text-gray-800 mb-2">${ref.user_name}</div>`
       : "";
-    const isOwner = currentUser && ref.user_sub === currentUser.sub;
-    const deleteButtonHTML = isOwner
-      ? `<button class="delete-btn bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg" data-id="${ref.ref_id}">Delete</button>`
-      : "";
 
     return `
             <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">
@@ -98,7 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="flex-shrink-0 flex items-center gap-4">
                         <span class="${categoryClasses} text-xs font-medium px-3 py-1 rounded-full">${ref.ref_category}</span>
                         <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${ref.ref_link}">Copy Link</button>
-                        ${deleteButtonHTML}
                     </div>
                 </div>
             </div>`;
@@ -136,38 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const openDeleteModal = (id, element) => {
-    referralToDelete = { id, element };
-    deleteModal.classList.remove("hidden");
-  };
-
-  const closeDeleteModal = () => {
-    referralToDelete = { id: null, element: null };
-    deleteModal.classList.add("hidden");
-  };
-
-  const handleDelete = async () => {
-    if (!referralToDelete.id) return;
-    try {
-      const response = await fetch(
-        `${API_URL}/api/referrals/${referralToDelete.id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-      if (response.ok) {
-        referralToDelete.element.remove();
-      } else {
-        alert("Failed to delete referral.");
-      }
-    } catch (error) {
-      console.error("Error deleting referral:", error);
-    } finally {
-      closeDeleteModal();
-    }
-  };
-
   referralsList.addEventListener("click", function (event) {
     const copyButton = event.target.closest(".copy-link-btn");
     if (copyButton) {
@@ -179,28 +138,20 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       return;
     }
-    const deleteButton = event.target.closest(".delete-btn");
-    if (deleteButton) {
-      const referralId = deleteButton.dataset.id;
-      const cardElement = deleteButton.closest(".referral-card");
-      openDeleteModal(referralId, cardElement);
-    }
   });
 
-  if (confirmDeleteBtn)
-    confirmDeleteBtn.addEventListener("click", handleDelete);
-  if (cancelDeleteBtn)
-    cancelDeleteBtn.addEventListener("click", closeDeleteModal);
   if (logoutBtn)
     logoutBtn.addEventListener("click", () => {
       localStorage.clear();
       window.location.href = "/";
     });
+
   if (userMenuButton)
     userMenuButton.addEventListener("click", (e) => {
       e.stopPropagation();
       userMenu.classList.toggle("hidden");
     });
+
   window.addEventListener("click", () => {
     if (userMenu && !userMenu.classList.contains("hidden")) {
       userMenu.classList.add("hidden");
@@ -209,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const init = async () => {
     await fetchCurrentUser();
-    // The /api/referrals route is now protected, so we only fetch if the user is logged in
     if (currentUser) {
       fetchAndRenderReferrals();
     } else {

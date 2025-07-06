@@ -10,6 +10,7 @@ const {
   ConfirmSignUpCommand,
   InitiateAuthCommand,
   GetUserCommand,
+  UpdateUserAttributesCommand, // <-- Import added here
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 
@@ -76,15 +77,31 @@ app.post("/api/signup", async (req, res) => {
     db.prepare(
       "INSERT INTO users (user_sub, user_name, user_email) VALUES (?, ?, ?)"
     ).run(UserSub, name, email);
-    res
-      .status(200)
-      .json({
-        message:
-          "User registered. Please check your email for a verification code.",
-      });
+    res.status(200).json({
+      message:
+        "User registered. Please check your email for a verification code.",
+    });
   } catch (error) {
     console.error("Cognito SignUp Error:", error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/confirm-signup", async (req, res) => {
+  const { email, confirmationCode } = req.body;
+  try {
+    await cognitoClient.send(
+      new ConfirmSignUpCommand({
+        ClientId: process.env.COGNITO_CLIENT_ID,
+        Username: email,
+        ConfirmationCode: confirmationCode,
+        SecretHash: calculateSecretHash(email),
+      })
+    );
+    res.status(200).json({ message: "User confirmed successfully." });
+  } catch (error) {
+    console.error("Cognito ConfirmSignUp Error:", error);
+    res.status(400).json({ error: error.message || "Confirmation failed" });
   }
 });
 
@@ -141,6 +158,49 @@ apiRouter.get("/user", async (req, res) => {
   }
 });
 
+apiRouter.put("/user/name", async (req, res) => {
+  const { name } = req.body;
+  const { sub: user_sub } = req.user;
+
+  if (!name) {
+    return res.status(400).json({ error: "Name is required." });
+  }
+
+  try {
+    // Update in Cognito
+    await cognitoClient.send(
+      new UpdateUserAttributesCommand({
+        AccessToken: req.token,
+        UserAttributes: [{ Name: "name", Value: name }],
+      })
+    );
+
+    // Update in local DB
+    const stmt = db.prepare(
+      "UPDATE users SET user_name = ? WHERE user_sub = ?"
+    );
+    stmt.run(name, user_sub);
+
+    res.status(200).json({ message: "Name updated successfully." });
+  } catch (error) {
+    console.error("Failed to update name:", error);
+    res.status(500).json({ error: "Failed to update name." });
+  }
+});
+
+apiRouter.get("/my-referrals", (req, res) => {
+  const { sub: user_sub } = req.user;
+  try {
+    const stmt = db.prepare(
+      `SELECT r.*, u.user_name FROM referrals r JOIN users u ON r.user_sub = u.user_sub WHERE r.user_sub = ? ORDER BY r.ref_created_at DESC`
+    );
+    res.json({ message: "success", data: stmt.all(user_sub) });
+  } catch (error) {
+    console.error("Failed to fetch user-specific referrals:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 apiRouter.get("/referrals", (req, res) => {
   try {
     const stmt = db.prepare(
@@ -149,6 +209,27 @@ apiRouter.get("/referrals", (req, res) => {
     res.json({ message: "success", data: stmt.all() });
   } catch (error) {
     console.error("Failed to fetch referrals:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+apiRouter.get("/referrals/:id", (req, res) => {
+  const { id } = req.params;
+  const { sub: user_sub } = req.user;
+  try {
+    const stmt = db.prepare(
+      "SELECT * FROM referrals WHERE ref_id = ? AND user_sub = ?"
+    );
+    const referral = stmt.get(id, user_sub);
+    if (referral) {
+      res.json({ message: "success", data: referral });
+    } else {
+      res
+        .status(404)
+        .json({ error: "Referral not found or permission denied." });
+    }
+  } catch (error) {
+    console.error(`Failed to fetch referral ${id}:`, error);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -162,14 +243,42 @@ apiRouter.post("/referrals", (req, res) => {
       "INSERT INTO referrals (user_sub, ref_name, ref_link, ref_desc, ref_category) VALUES (?, ?, ?, ?, ?)"
     );
     const info = stmt.run(req.user.sub, title, link, description, category);
-    res
-      .status(201)
-      .json({
-        message: "success",
-        data: { id: info.lastInsertRowid, ...req.body },
-      });
+    res.status(201).json({
+      message: "success",
+      data: { id: info.lastInsertRowid, ...req.body },
+    });
   } catch (error) {
     console.error("Failed to add referral:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+apiRouter.put("/referrals/:id", (req, res) => {
+  const { id } = req.params;
+  const { sub: user_sub } = req.user;
+  const { title, link, description, category } = req.body;
+
+  if (!title || !link || !category) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const stmt = db.prepare(
+      `UPDATE referrals 
+             SET ref_name = ?, ref_link = ?, ref_desc = ?, ref_category = ? 
+             WHERE ref_id = ? AND user_sub = ?`
+    );
+    const info = stmt.run(title, link, description, category, id, user_sub);
+
+    if (info.changes > 0) {
+      res.status(200).json({ message: "Referral updated successfully" });
+    } else {
+      res
+        .status(404)
+        .json({ error: "Referral not found or permission denied." });
+    }
+  } catch (error) {
+    console.error(`Failed to update referral:`, error);
     res.status(500).json({ error: "Database error" });
   }
 });

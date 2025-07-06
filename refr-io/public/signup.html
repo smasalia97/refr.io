@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - refr.io</title>
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,13 +33,14 @@
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto p-4 md:p-8 mt-10">
-        <div class="max-w-md mx-auto bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm">
-            <h1 id="form-title" class="text-2xl font-semibold text-gray-900 text-center">Create an Account</h1>
-            <p id="form-subtitle" class="text-center text-gray-500 mt-2">Join to share and find the best referrals.</p>
+    <main class="max-w-5xl mx-auto p-4 sm:px-6 md:px-12 lg:px-20 mt-16 mb-16">
+        <div class="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-8 md:p-12 shadow-xl space-y-4">
+            <h1 id="form-title" class="text-3xl font-bold text-gray-900 text-center mt-2">Create an Account</h1>
+            <p id="form-subtitle" class="text-center text-gray-500 mt-4 mb-6">Join to share and find the best referrals.
+            </p>
 
-            <form id="signup-form" class="space-y-6 mt-8">
-                <div id="initial-signup-fields">
+            <form id="signup-form" class="space-y-6 mt-4">
+                <div id="initial-signup-fields" class="space-y-4">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
                         <input type="text" name="name" id="name" autocomplete="name" placeholder="John Doe"
@@ -64,14 +66,14 @@
                             class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
                             required>
                     </div>
-                    <div class="flex items-center">
+                    <div class="flex items-center mt-1 mb-2">
                         <input id="show-password" name="show-password" type="checkbox"
                             class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
                         <label for="show-password" class="ml-2 block text-sm text-gray-900">Show Password</label>
                     </div>
                 </div>
 
-                <div id="confirmation-fields" class="hidden">
+                <div id="confirmation-fields" class="hidden space-y-4">
                     <div>
                         <label for="confirmation-code" class="block text-sm font-medium text-gray-700">Confirmation
                             Code</label>
@@ -81,7 +83,7 @@
                     </div>
                 </div>
 
-                <div class="pt-2">
+                <div class="pt-4 space-y-3">
                     <button id="signup-btn" type="submit"
                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-200 ease-in-out transform hover:scale-[1.01]">
                         Create Account
@@ -101,6 +103,7 @@
             </p>
         </div>
     </main>
+
     <script src="js/config.js"></script>
     <script src="js/signup.js" defer></script>
 </body>

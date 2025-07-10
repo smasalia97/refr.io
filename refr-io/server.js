@@ -18,7 +18,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Middleware & Static Files ---
-app.use(cors());
+const corsOptions = {
+  origin: "https://www.refrio.org",
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 

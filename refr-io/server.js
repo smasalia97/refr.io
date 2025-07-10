@@ -1,16 +1,14 @@
 require("dotenv").config();
-
 const express = require("express");
-const path = require("path");
-const Database = require("better-sqlite3");
 const cors = require("cors");
+const { createClient } = require("@supabase/supabase-js");
 const {
   CognitoIdentityProviderClient,
   SignUpCommand,
   ConfirmSignUpCommand,
   InitiateAuthCommand,
   GetUserCommand,
-  UpdateUserAttributesCommand, // <-- Import added here
+  UpdateUserAttributesCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 
@@ -18,35 +16,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Middleware & Static Files ---
+
+// Configure CORS to allow requests from your frontend domain
 const corsOptions = {
   origin: "https://www.refrio.org",
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
 
-// --- Database Setup ---
-const dbPath = path.resolve(__dirname, "db", "refr.db");
-const db = new Database(dbPath);
-db.pragma("journal_mode = WAL"); // Helps prevent locking issues
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        user_sub TEXT PRIMARY KEY,
-        user_name TEXT NOT NULL,
-        user_email TEXT NOT NULL UNIQUE
-    );
-    CREATE TABLE IF NOT EXISTS referrals (
-        ref_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_sub TEXT NOT NULL,
-        ref_name TEXT NOT NULL,
-        ref_link TEXT NOT NULL,
-        ref_desc TEXT,
-        ref_category TEXT NOT NULL,
-        ref_created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_sub) REFERENCES users (user_sub)
-    );
-`);
+// --- Supabase Client Setup ---
+// These variables must be set in your Render environment variables
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Cognito Client ---
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -77,9 +59,16 @@ app.post("/api/signup", async (req, res) => {
         ],
       })
     );
-    db.prepare(
-      "INSERT INTO users (user_sub, user_name, user_email) VALUES (?, ?, ?)"
-    ).run(UserSub, name, email);
+
+    // Insert new user into the Supabase 'users' table
+    const { error } = await supabase
+      .from("users")
+      .insert([{ user_sub: UserSub, user_name: name, user_email: email }]);
+
+    if (error) {
+      console.error("Supabase user insert error:", error);
+    }
+
     res.status(200).json({
       message:
         "User registered. Please check your email for a verification code.",
@@ -122,22 +111,6 @@ app.post("/api/login", async (req, res) => {
         },
       })
     );
-    const userInDb = db
-      .prepare("SELECT * FROM users WHERE user_email = ?")
-      .get(email);
-    if (!userInDb) {
-      const { UserAttributes } = await cognitoClient.send(
-        new GetUserCommand({ AccessToken: AuthenticationResult.AccessToken })
-      );
-      const name =
-        UserAttributes.find((attr) => attr.Name === "name")?.Value ||
-        "Default User";
-      const sub = UserAttributes.find((attr) => attr.Name === "sub")?.Value;
-      if (sub)
-        db.prepare(
-          "INSERT INTO users (user_sub, user_name, user_email) VALUES (?, ?, ?)"
-        ).run(sub, name, email);
-    }
     res.status(200).json(AuthenticationResult);
   } catch (error) {
     console.error("Cognito InitiateAuth Error:", error);
@@ -178,11 +151,13 @@ apiRouter.put("/user/name", async (req, res) => {
       })
     );
 
-    // Update in local DB
-    const stmt = db.prepare(
-      "UPDATE users SET user_name = ? WHERE user_sub = ?"
-    );
-    stmt.run(name, user_sub);
+    // Update in Supabase DB
+    const { error } = await supabase
+      .from("users")
+      .update({ user_name: name })
+      .eq("user_sub", user_sub);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Name updated successfully." });
   } catch (error) {
@@ -191,41 +166,57 @@ apiRouter.put("/user/name", async (req, res) => {
   }
 });
 
-apiRouter.get("/my-referrals", (req, res) => {
+apiRouter.get("/my-referrals", async (req, res) => {
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      `SELECT r.*, u.user_name FROM referrals r JOIN users u ON r.user_sub = u.user_sub WHERE r.user_sub = ? ORDER BY r.ref_created_at DESC`
-    );
-    res.json({ message: "success", data: stmt.all(user_sub) });
+    const { data, error } = await supabase
+      .from("referrals")
+      .select(
+        `ref_id, ref_name, ref_link, ref_desc, ref_category, ref_created_at, users (user_name)`
+      )
+      .eq("user_sub", user_sub)
+      .order("ref_created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ message: "success", data });
   } catch (error) {
     console.error("Failed to fetch user-specific referrals:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-apiRouter.get("/referrals", (req, res) => {
+apiRouter.get("/referrals", async (req, res) => {
   try {
-    const stmt = db.prepare(
-      `SELECT r.*, u.user_name FROM referrals r JOIN users u ON r.user_sub = u.user_sub ORDER BY r.ref_created_at DESC`
-    );
-    res.json({ message: "success", data: stmt.all() });
+    const { data, error } = await supabase
+      .from("referrals")
+      .select(
+        `ref_id, ref_name, ref_link, ref_desc, ref_category, ref_created_at, users (user_name)`
+      )
+      .order("ref_created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ message: "success", data });
   } catch (error) {
     console.error("Failed to fetch referrals:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-apiRouter.get("/referrals/:id", (req, res) => {
+apiRouter.get("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      "SELECT * FROM referrals WHERE ref_id = ? AND user_sub = ?"
-    );
-    const referral = stmt.get(id, user_sub);
-    if (referral) {
-      res.json({ message: "success", data: referral });
+    const { data, error } = await supabase
+      .from("referrals")
+      .select("*")
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub)
+      .single();
+
+    if (error) throw error;
+
+    if (data) {
+      res.json({ message: "success", data });
     } else {
       res
         .status(404)
@@ -237,18 +228,30 @@ apiRouter.get("/referrals/:id", (req, res) => {
   }
 });
 
-apiRouter.post("/referrals", (req, res) => {
+apiRouter.post("/referrals", async (req, res) => {
   const { title, link, description, category } = req.body;
   if (!title || !link || !category)
     return res.status(400).json({ error: "Missing required fields" });
   try {
-    const stmt = db.prepare(
-      "INSERT INTO referrals (user_sub, ref_name, ref_link, ref_desc, ref_category) VALUES (?, ?, ?, ?, ?)"
-    );
-    const info = stmt.run(req.user.sub, title, link, description, category);
+    const { data, error } = await supabase
+      .from("referrals")
+      .insert([
+        {
+          user_sub: req.user.sub,
+          ref_name: title,
+          ref_link: link,
+          ref_desc: description,
+          ref_category: category,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
     res.status(201).json({
       message: "success",
-      data: { id: info.lastInsertRowid, ...req.body },
+      data: data,
     });
   } catch (error) {
     console.error("Failed to add referral:", error);
@@ -256,7 +259,7 @@ apiRouter.post("/referrals", (req, res) => {
   }
 });
 
-apiRouter.put("/referrals/:id", (req, res) => {
+apiRouter.put("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   const { title, link, description, category } = req.body;
@@ -266,14 +269,21 @@ apiRouter.put("/referrals/:id", (req, res) => {
   }
 
   try {
-    const stmt = db.prepare(
-      `UPDATE referrals 
-             SET ref_name = ?, ref_link = ?, ref_desc = ?, ref_category = ? 
-             WHERE ref_id = ? AND user_sub = ?`
-    );
-    const info = stmt.run(title, link, description, category, id, user_sub);
+    const { data, error } = await supabase
+      .from("referrals")
+      .update({
+        ref_name: title,
+        ref_link: link,
+        ref_desc: description,
+        ref_category: category,
+      })
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub)
+      .select();
 
-    if (info.changes > 0) {
+    if (error) throw error;
+
+    if (data && data.length > 0) {
       res.status(200).json({ message: "Referral updated successfully" });
     } else {
       res
@@ -286,15 +296,19 @@ apiRouter.put("/referrals/:id", (req, res) => {
   }
 });
 
-apiRouter.delete("/referrals/:id", (req, res) => {
+apiRouter.delete("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      "DELETE FROM referrals WHERE ref_id = ? AND user_sub = ?"
-    );
-    const info = stmt.run(id, user_sub);
-    if (info.changes > 0) {
+    const { error, count } = await supabase
+      .from("referrals")
+      .delete({ count: "exact" })
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub);
+
+    if (error) throw error;
+
+    if (count > 0) {
       res.status(200).json({ message: "Referral deleted successfully" });
     } else {
       res
@@ -310,9 +324,9 @@ apiRouter.delete("/referrals/:id", (req, res) => {
 // Apply the protected router to the /api path
 app.use("/api", apiRouter);
 
-// --- HTML Page Route (Catch-all) ---
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// A simple root route to confirm the server is running
+app.get("/", (req, res) => {
+  res.send("refr.io backend is running!");
 });
 
 app.listen(PORT, () => {

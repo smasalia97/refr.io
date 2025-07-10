@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const userMenuButton = document.getElementById("user-menu-button");
   const userMenu = document.getElementById("user-menu");
 
-  const API_URL = "http://localhost:3000";
+  // const API_URL = "http://localhost:3000";
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
 

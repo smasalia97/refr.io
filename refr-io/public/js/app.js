@@ -70,14 +70,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // In public/js/app.js
+  // At the top of app.js and profile.js
+
+  const capitalizeName = (name) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   const createReferralCard = (ref) => {
     const categoryClasses = getCategoryClasses(ref.ref_category);
     const descriptionHTML = ref.ref_desc
       ? `<p class="text-sm text-gray-600 mt-1">${ref.ref_desc}</p>`
       : "";
-    const userNameHTML = ref.user_name
-      ? `<div class="text-sm font-semibold text-gray-800 mb-2">${ref.user_name}</div>`
-      : "";
+
+    // Add the user_name to the card if it exists
+    const userNameHTML =
+      ref.users && ref.users.user_name
+        ? `<div class="text-sm font-semibold text-gray-800 mb-2">${capitalizeName(
+            ref.users.user_name
+          )}</div>`
+        : "";
 
     return `
             <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">

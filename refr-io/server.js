@@ -16,10 +16,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Middleware & Static Files ---
-
-// Configure CORS to allow requests from your frontend domain
 const corsOptions = {
-  origin: "https://www.refrio.org",
+  origin: [
+    "https://www.refrio.org",
+  ],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -185,12 +185,18 @@ apiRouter.get("/my-referrals", async (req, res) => {
   }
 });
 
+// In server.js
+
 apiRouter.get("/referrals", async (req, res) => {
   try {
+    // Correctly join the users table and select the user_name
     const { data, error } = await supabase
       .from("referrals")
       .select(
-        `ref_id, ref_name, ref_link, ref_desc, ref_category, ref_created_at, users (user_name)`
+        `
+            *,
+            users ( user_name )
+        `
       )
       .order("ref_created_at", { ascending: false });
 

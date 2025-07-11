@@ -28,6 +28,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // At the top of app.js and profile.js
+
+  const capitalizeName = (name) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   const fetchProfile = async () => {
     if (!accessToken) {
       loadingMessage.textContent = "Please log in to view your profile.";

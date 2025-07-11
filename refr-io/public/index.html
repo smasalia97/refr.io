@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>refr.io - Share & Find Referrals</title>
+    <title>refr.io - The Ultimate Referral Sharing Platform</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png?v=1.1">
     <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png?v=1.1">
@@ -27,38 +27,120 @@
 
 <body class="antialiased text-gray-800">
 
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto py-4 px-4 md:px-8 flex justify-between items-center">
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="max-w-6xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <a href="/" class="text-2xl font-bold text-brand-green">refr.io</a>
             <div class="flex items-center gap-4">
                 <a href="login.html"
                     class="font-semibold text-gray-600 hover:text-brand-green transition-colors">Login</a>
                 <a href="signup.html"
-                    class="bg-brand-green text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-emerald-700 transition duration-200 ease-in-out hover:-translate-y-px transform min-h-[40px] flex items-center">
+                    class="bg-brand-green text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-emerald-700 transition-transform duration-200 hover:-translate-y-px">
                     Sign Up
                 </a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto p-4 md:p-8 text-center mt-16">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900">
-            The Easiest Way to Share Referrals
-        </h1>
-        <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Stop searching endlessly. Find and share the best referral links for credit cards, food delivery, shopping,
-            and more.
-        </p>
-        <div class="mt-8">
-            <a href="signup.html"
-                class="bg-brand-green text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:bg-emerald-700 transition duration-300 ease-in-out transform hover:-translate-y-1">
-                Get Started for Free
-            </a>
-        </div>
+    <main class="w-full">
+        <section class="text-center py-20 px-4 sm:px-6 lg:px-8 bg-white">
+            <div class="max-w-3xl mx-auto">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
+                    The Easiest Way to Share Referrals
+                </h1>
+                <p class="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+                    Stop searching endlessly. Find and share the best referral links for credit cards, food delivery,
+                    shopping,
+                    and more.
+                </p>
+                <div class="mt-8">
+                    <a href="signup.html"
+                        class="bg-brand-green text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:bg-emerald-700 transition-transform duration-300 transform hover:-translate-y-1 inline-block">
+                        Get Started for Free
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="py-20 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
+                    <p class="text-gray-600 mt-2">Get up and running in three simple steps.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-emerald-100 text-emerald-600">
+                            <span>1</span>
+                        </div>
+                        <h3 class="mt-4 text-xl font-semibold">Create an Account</h3>
+                        <p class="mt-2 text-gray-600">Sign up in seconds and get instant access to our community.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon bg-sky-100 text-sky-600">
+                            <span>2</span>
+                        </div>
+                        <h3 class="mt-4 text-xl font-semibold">Post Your Links</h3>
+                        <p class="mt-2 text-gray-600">Easily add your own referral links for others to discover.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon bg-indigo-100 text-indigo-600">
+                            <span>3</span>
+                        </div>
+                        <h3 class="mt-4 text-xl font-semibold">Discover & Earn</h3>
+                        <p class="mt-2 text-gray-600">Find referrals you need and earn rewards from the ones you share.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="bg-white py-20 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-900">Get In Touch</h2>
+                    <p class="mt-2 text-gray-600">Have questions? We'd love to hear from you.</p>
+                </div>
+                <form action="https://formspree.io/f/mnnvezgy" method="POST" class="mt-8 space-y-6">
+                    <div>
+                        <label for="name" class="sr-only">Full Name</label>
+                        <input type="text" name="name" id="name" required class="contact-input" placeholder="Full Name">
+                    </div>
+                    <div>
+                        <label for="email" class="sr-only">Email Address</label>
+                        <input type="email" name="email" id="email" required class="contact-input"
+                            placeholder="Email Address">
+                    </div>
+                    <div>
+                        <label for="message" class="sr-only">Message</label>
+                        <textarea name="message" id="message" rows="4" required class="contact-input"
+                            placeholder="Your Message"></textarea>
+                    </div>
+                    <div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-white font-semibold bg-brand-green hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="bg-slate-50 py-20 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mx-auto text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Ready to Join?</h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    Become a part of the <span class="font-semibold text-brand-green">refr.io</span> community today and
+                    never miss out on a referral bonus again.
+                </p>
+                <div class="mt-8">
+                    <a href="signup.html"
+                        class="bg-brand-green text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:bg-emerald-700 transition-transform duration-300 transform hover:-translate-y-1 inline-block">
+                        Sign Up Now
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
-
 </body>
-
-<script src="js/config.js?v=1.1"></script>
 
 </html>

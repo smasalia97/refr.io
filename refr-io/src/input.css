@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* In src/input.css */
+
+.feature-card {
+  @apply bg-white p-8 rounded-xl shadow-md transform hover:-translate-y-2 transition-transform duration-300;
+}
+
+.feature-icon {
+  @apply w-16 h-16 rounded-full inline-flex items-center justify-center text-2xl font-bold;
+}
+
+/* In src/input.css */
+
+.contact-input {
+  @apply block w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm;
+}

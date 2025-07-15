@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const userMenuButton = document.getElementById("user-menu-button");
   const userMenu = document.getElementById("user-menu");
 
-  // const API_URL = "http://localhost:3000";
+  const API_URL = "http://localhost:3000";
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
 
@@ -98,12 +98,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
             <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">
                 ${userNameHTML}
-                <div class="flex justify-between items-center gap-4">
+
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4">
                     <div class="flex-grow">
                         <a href="${ref.ref_link}" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${ref.ref_name}</h2></a>
                         ${descriptionHTML}
                     </div>
-                    <div class="flex-shrink-0 flex items-center gap-4">
+      
+                    <div class="w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4">
+              
                         <span class="${categoryClasses} text-xs font-medium px-3 py-1 rounded-full">${ref.ref_category}</span>
                         <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${ref.ref_link}">Copy Link</button>
                     </div>

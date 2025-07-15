@@ -11,6 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const referralId = params.get("id");
 
+  // const API_URL = "https://localhost:3000";
+
   if (!referralId) {
     window.location.href = "/profile.html";
     return;

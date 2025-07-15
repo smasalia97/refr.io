@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const newNameInput = document.getElementById("new-name");
   const editNameMessage = document.getElementById("edit-name-message");
 
-  // const API_URL = "http://localhost:3000";
+  const API_URL = "http://localhost:3000";
   const accessToken = localStorage.getItem("accessToken");
   let referralToDelete = { id: null, element: null };
 
@@ -65,12 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingMessage.style.display = "none";
       profileDetails.innerHTML = `
                 <div class="space-y-4">
-                    <div class="flex justify-between items-center">
+                    <div class="sm:flex sm:justify-between sm:items-center">
                         <div>
                             <h3 class="text-lg font-medium text-gray-900">Name</h3>
                             <p class="text-gray-600">${name}</p>
                         </div>
-                        <button id="edit-name-btn" class="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</button>
+                        <button id="edit-name-btn" class="mt-2 sm:mt-0 bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</button>
                     </div>
                     <div>
                         <h3 class="text-lg font-medium text-gray-900">Email</h3>
@@ -114,17 +114,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // In public/js/profile.js
+
   const createMyReferralCard = (ref) => {
     return `
             <div class="referral-card bg-white border border-slate-200 rounded-xl p-5" data-id="${ref.ref_id}">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h3 class="font-semibold text-gray-800">${ref.ref_name}</h3>
                         <a href="${ref.ref_link}" class="text-sm text-brand-green hover:underline" target="_blank">${ref.ref_link}</a>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <a href="/edit-referral.html?id=${ref.ref_id}" class="edit-btn bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</a>
-                        <button class="delete-btn bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg hover:bg-red-200">Delete</button>
+                    <div class="flex-shrink-0 w-full sm:w-auto flex items-center gap-2 mt-2 sm:mt-0">
+                        <a href="/edit-referral.html?id=${ref.ref_id}" class="flex-1 sm:flex-none text-center edit-btn bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</a>
+                        <button class="flex-1 sm:flex-none delete-btn bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg hover:bg-red-200">Delete</button>
                     </div>
                 </div>
             </div>`;

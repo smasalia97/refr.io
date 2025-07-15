@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const newNameInput = document.getElementById("new-name");
   const editNameMessage = document.getElementById("edit-name-message");
 
-  const API_URL = "http://localhost:3000";
   const accessToken = localStorage.getItem("accessToken");
   let referralToDelete = { id: null, element: null };
 

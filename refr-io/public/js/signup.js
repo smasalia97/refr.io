@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // const API_URL = "http://localhost:3000"; // Define the backend server URL
-
   const signupForm = document.getElementById("signup-form");
   const formMessage = document.getElementById("form-message");
 

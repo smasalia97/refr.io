@@ -19,8 +19,8 @@ const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: [
     "https://www.refrio.org",
-    // "http://localhost:8080",
-    // "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
   ],
 };
 app.use(cors(corsOptions));
@@ -63,9 +63,14 @@ app.post("/api/signup", async (req, res) => {
     );
 
     // Insert new user into the Supabase 'users' table
-    const { error } = await supabase
-      .from("users")
-      .insert([{ user_sub: UserSub, user_name: name, user_email: email }]);
+    const { error } = await supabase.from("users").insert([
+      {
+        user_sub: UserSub,
+        user_name: name,
+        user_email: email,
+        user_created_at: new Date().toISOString(),
+      },
+    ]);
 
     if (error) {
       console.error("Supabase user insert error:", error);
@@ -129,6 +134,27 @@ apiRouter.get("/user", async (req, res) => {
     const { Username, UserAttributes } = await cognitoClient.send(
       new GetUserCommand({ AccessToken: req.token })
     );
+
+    const subAttribute = UserAttributes.find((attr) => attr.Name === "sub");
+
+    if (subAttribute) {
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("user_created_at")
+        .eq("user_sub", subAttribute.Value)
+        .single();
+
+      if (userError && userError.code !== "PGRST116") {
+        console.error("Failed to fetch user from Supabase:", userError);
+      } else {
+        return res.json({
+          Username,
+          UserAttributes,
+          user_created_at: userData ? userData.user_created_at : null,
+        });
+      }
+    }
+
     res.json({ Username, UserAttributes });
   } catch (error) {
     console.error("Failed to fetch user:", error);
@@ -249,12 +275,53 @@ apiRouter.post("/referrals", async (req, res) => {
   const { title, link, description, category } = req.body;
   if (!title || !link || !category)
     return res.status(400).json({ error: "Missing required fields" });
+
+  const { sub } = req.user;
+
   try {
+    // Get user attributes from Cognito
+    const { UserAttributes } = await cognitoClient.send(
+      new GetUserCommand({ AccessToken: req.token })
+    );
+
+    const nameAttribute = UserAttributes.find((attr) => attr.Name === "name");
+    const emailAttribute = UserAttributes.find((attr) => attr.Name === "email");
+
+    const name = nameAttribute ? nameAttribute.Value : "N/A";
+    const email = emailAttribute ? emailAttribute.Value : "N/A";
+
+    // Check if the user exists in Supabase, and if not, create them
+    let { data: user, error: userError } = await supabase
+      .from("users")
+      .select("user_sub")
+      .eq("user_sub", sub)
+      .single();
+
+    if (userError && userError.code === "PGRST116") {
+      // User does not exist, so create them
+      const { data: newUser, error: newUserError } = await supabase
+        .from("users")
+        .insert([
+          {
+            user_sub: sub,
+            user_name: name,
+            user_email: email,
+            user_created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+      if (newUserError) throw newUserError;
+      user = newUser;
+    } else if (userError) {
+      throw userError;
+    }
+
     const { data, error } = await supabase
       .from("referrals")
       .insert([
         {
-          user_sub: req.user.sub,
+          user_sub: sub,
           ref_name: title,
           ref_link: link,
           ref_desc: description,

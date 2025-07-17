@@ -60,6 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = nameAttribute ? nameAttribute.Value : "N/A";
       const email = emailAttribute ? emailAttribute.Value : "N/A";
+      const createdAt = userData.user_created_at
+        ? new Date(userData.user_created_at).toLocaleDateString()
+        : "N/A";
 
       loadingMessage.style.display = "none";
       profileDetails.innerHTML = `
@@ -74,6 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div>
                         <h3 class="text-lg font-medium text-gray-900">Email <span class="text-sm font-normal text-gray-500">(cannot be changed)</span></h3>
                         <p class="text-gray-600">${email}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Member Since</h3>
+                        <p class="text-gray-600">${createdAt}</p>
                     </div>
                 </div>`;
 

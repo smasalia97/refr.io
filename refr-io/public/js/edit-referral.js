@@ -16,6 +16,68 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const categoryKeywords = {
+    "Credit Card": [
+      "card",
+      "credit",
+      "apr",
+      "points",
+      "rewards",
+      "bank",
+      "finance",
+    ],
+    Food: [
+      "food",
+      "delivery",
+      "restaurant",
+      "doordash",
+      "uber eats",
+      "grubhub",
+      "meal",
+      "dining",
+    ],
+    Shopping: ["shop", "store", "discount", "sale", "rakuten", "retail"],
+    Travel: [
+      "travel",
+      "hotel",
+      "motel",
+      "airbnb",
+      "flight",
+      "booking",
+      "vacation",
+      "trip",
+      "tour",
+      "journey",
+    ],
+    Services: [
+      "service",
+      "software",
+      "notion",
+      "subscription",
+      "tool",
+      "app",
+      "platform",
+    ],
+  };
+
+  const suggestCategory = () => {
+    const title = titleInput.value.toLowerCase();
+    const description = descriptionInput.value.toLowerCase();
+    const text = `${title} ${description}`;
+
+    for (const category in categoryKeywords) {
+      if (
+        categoryKeywords[category].some((keyword) => text.includes(keyword))
+      ) {
+        categoryInput.value = category;
+        return;
+      }
+    }
+  };
+
+  titleInput.addEventListener("input", suggestCategory);
+  descriptionInput.addEventListener("input", suggestCategory);
+
   const fetchReferralData = async () => {
     if (!accessToken) {
       messageEl.textContent = "You must be logged in to edit a referral.";

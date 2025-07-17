@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <button id="edit-name-btn" class="mt-2 sm:mt-0 bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</button>
                     </div>
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">Email</h3>
+                        <h3 class="text-lg font-medium text-gray-900">Email <span class="text-sm font-normal text-gray-500">(cannot be changed)</span></h3>
                         <p class="text-gray-600">${email}</p>
                     </div>
                 </div>`;

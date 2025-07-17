@@ -11,6 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
+  let currentPage = 1;
+  let totalPages = 1;
+
+  const prevButton = document.getElementById("prev-page");
+  const nextButton = document.getElementById("next-page");
+  const pageIndicator = document.getElementById("page-indicator");
 
   const updateHeader = () => {
     if (currentUser) {
@@ -113,13 +119,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>`;
   };
 
-  const fetchAndRenderReferrals = async () => {
+  const updatePaginationControls = () => {
+    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+  };
+
+  const fetchAndRenderReferrals = async (page = 1) => {
     if (!accessToken) {
       loadingMessage.textContent = "Please log in to see referrals.";
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/api/referrals`, {
+      const response = await fetch(`${API_URL}/api/referrals?page=${page}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!response.ok) throw new Error("Network response was not ok");
@@ -135,9 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
             createReferralCard(ref)
           );
         });
+        totalPages = result.totalPages;
+        updatePaginationControls();
       } else {
         referralsList.innerHTML =
           '<p class="text-gray-500 text-center">No referrals posted yet. Be the first!</p>';
+        document.getElementById("pagination-controls").style.display = "none";
       }
     } catch (error) {
       console.error("Error fetching referrals:", error);
@@ -176,10 +191,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  prevButton.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchAndRenderReferrals(currentPage);
+    }
+  });
+
+  nextButton.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      fetchAndRenderReferrals(currentPage);
+    }
+  });
+
   const init = async () => {
     await fetchCurrentUser();
     if (currentUser) {
-      fetchAndRenderReferrals();
+      fetchAndRenderReferrals(currentPage);
     } else {
       loadingMessage.textContent = "Please log in to see referrals.";
     }

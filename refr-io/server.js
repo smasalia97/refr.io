@@ -190,20 +190,29 @@ apiRouter.get("/my-referrals", async (req, res) => {
 // In server.js
 
 apiRouter.get("/referrals", async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
   try {
-    // Correctly join the users table and select the user_name
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("referrals")
       .select(
         `
             *,
             users ( user_name )
-        `
+        `,
+        { count: "exact" }
       )
-      .order("ref_created_at", { ascending: false });
+      .order("ref_created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
-    res.json({ message: "success", data });
+    res.json({
+      message: "success",
+      data,
+      totalPages: Math.ceil(count / limit),
+    });
   } catch (error) {
     console.error("Failed to fetch referrals:", error);
     res.status(500).json({ error: "Database error" });

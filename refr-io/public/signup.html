@@ -19,6 +19,11 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Style for password criteria list */
+        .password-criteria li {
+            transition: color 0.2s ease-in-out;
+        }
     </style>
 
     <meta name="description"
@@ -66,6 +71,14 @@
                         <input type="password" name="password" id="password" autocomplete="new-password"
                             class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
                             required>
+                    </div>
+                    <div id="password-criteria-container" class="hidden">
+                        <ul class="text-sm text-gray-500 space-y-1 mt-2 password-criteria">
+                            <li id="length-check">At least 8 characters</li>
+                            <li id="case-check">An uppercase &amp; lowercase letter</li>
+                            <li id="number-check">At least one number</li>
+                            <li id="symbol-check">At least one special character (!@#$...)</li>
+                        </ul>
                     </div>
                     <div>
                         <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm

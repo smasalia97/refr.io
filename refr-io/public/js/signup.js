@@ -2,11 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const formMessage = document.getElementById("form-message");
 
-  // Form sections
   const initialFields = document.getElementById("initial-signup-fields");
   const confirmationFields = document.getElementById("confirmation-fields");
 
-  // Inputs
   const nameField = document.getElementById("name");
   const emailField = document.getElementById("email");
   const passwordField = document.getElementById("password");
@@ -14,16 +12,54 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmationCodeField = document.getElementById("confirmation-code");
   const showPasswordCheckbox = document.getElementById("show-password");
 
-  // Buttons and Text
   const signupBtn = document.getElementById("signup-btn");
   const confirmBtn = document.getElementById("confirm-btn");
   const formTitle = document.getElementById("form-title");
   const formSubtitle = document.getElementById("form-subtitle");
 
-  // We'll store the email here after the first step
+  // --- NEW: Password criteria elements ---
+  const criteriaContainer = document.getElementById(
+    "password-criteria-container"
+  );
+  const lengthCheck = document.getElementById("length-check");
+  const caseCheck = document.getElementById("case-check");
+  const numberCheck = document.getElementById("number-check");
+  const symbolCheck = document.getElementById("symbol-check");
+
   let userEmail = "";
 
-  // --- Event Listener for Show Password ---
+  // --- NEW: Password validation logic ---
+  const validatePassword = () => {
+    const value = passwordField.value;
+    const checks = {
+      length: value.length >= 8,
+      case: /[A-Z]/.test(value) && /[a-z]/.test(value),
+      number: /[0-9]/.test(value),
+      symbol: /[!@#$%^&*(),.?":{}|<>]/.test(value),
+    };
+
+    const setIndicator = (el, valid) => {
+      if (valid) {
+        el.style.color = "#10B981"; // brand-green
+      } else {
+        el.style.color = "#6B7280"; // gray-500
+      }
+    };
+
+    setIndicator(lengthCheck, checks.length);
+    setIndicator(caseCheck, checks.case);
+    setIndicator(numberCheck, checks.number);
+    setIndicator(symbolCheck, checks.symbol);
+
+    return Object.values(checks).every(Boolean);
+  };
+
+  passwordField.addEventListener("focus", () => {
+    criteriaContainer.classList.remove("hidden");
+  });
+
+  passwordField.addEventListener("input", validatePassword);
+
   if (showPasswordCheckbox) {
     showPasswordCheckbox.addEventListener("change", () => {
       const isChecked = showPasswordCheckbox.checked;
@@ -32,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Event Listener for Initial Signup ---
   signupBtn.addEventListener("click", async (event) => {
     event.preventDefault();
     formMessage.textContent = "";
@@ -44,6 +79,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!name || !email || !password || !confirmPassword) {
       formMessage.textContent = "Please fill out all fields.";
+      formMessage.className = "text-red-600 text-center mt-4";
+      return;
+    }
+
+    // --- NEW: Check if password is valid before submitting ---
+    if (!validatePassword()) {
+      formMessage.textContent = "Password does not meet all the criteria.";
       formMessage.className = "text-red-600 text-center mt-4";
       return;
     }
@@ -68,9 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        userEmail = email; // Save email for the confirmation step
+        userEmail = email;
 
-        // --- UI Transition to Confirmation Step ---
         formTitle.textContent = "Check Your Email";
         formSubtitle.textContent = `We've sent a confirmation code to ${userEmail}.`;
 
@@ -91,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Event Listener for Confirmation Step ---
   confirmBtn.addEventListener("click", async (event) => {
     event.preventDefault();
     const confirmationCode = confirmationCodeField.value;

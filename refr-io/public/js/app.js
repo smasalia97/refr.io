@@ -62,10 +62,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // In public/js/app.js
+
   const getCategoryClasses = (category) => {
     switch (category) {
-      case "Credit Card":
-        return "bg-emerald-100 text-emerald-800";
+      // "Credit Card" case is removed
+      case "Finance":
+        return "bg-amber-100 text-amber-800";
       case "Food":
         return "bg-lime-100 text-lime-800";
       case "Shopping":
@@ -74,6 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return "bg-sky-100 text-sky-800";
       case "Services":
         return "bg-indigo-100 text-indigo-800";
+      case "Software":
+        return "bg-indigo-100 text-indigo-800";
+      case "Gaming":
+        return "bg-rose-100 text-rose-800";
       default:
         return "bg-slate-100 text-slate-800";
     }

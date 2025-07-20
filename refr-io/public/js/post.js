@@ -8,15 +8,21 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!postForm) return;
 
   const categoryKeywords = {
-    "Credit Card": [
+    Finance: [
       "card",
       "credit",
       "apr",
       "points",
       "rewards",
+      "invest",
+      "stock",
+      "crypto",
       "bank",
-      "finance",
+      "loan",
+      "robinhood",
+      "wealthfront",
     ],
+
     Food: [
       "food",
       "delivery",
@@ -48,6 +54,27 @@ document.addEventListener("DOMContentLoaded", () => {
       "tool",
       "app",
       "platform",
+    ],
+    Software: [
+      "saas",
+      "software",
+      "notion",
+      "dropbox",
+      "app",
+      "tool",
+      "platform",
+      "service",
+      "subscription",
+    ],
+    Gaming: [
+      "game",
+      "gaming",
+      "steam",
+      "console",
+      "xbox",
+      "playstation",
+      "nintendo",
+      "pc",
     ],
   };
 

@@ -1,3 +1,4 @@
+// smasalia97/refr.io/refr.io-refr-frontend/refr-io/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -19,15 +20,14 @@ const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: [
     "https://www.refrio.org",
-    // "http://localhost:8080",
-    // "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
   ],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 
 // --- Supabase Client Setup ---
-// These variables must be set in your Render environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -62,7 +62,6 @@ app.post("/api/signup", async (req, res) => {
       })
     );
 
-    // Insert new user into the Supabase 'users' table
     const { error } = await supabase.from("users").insert([
       {
         user_sub: UserSub,
@@ -125,7 +124,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// --- This router protects all API routes defined within it ---
 const apiRouter = express.Router();
 apiRouter.use(verifyToken);
 
@@ -171,7 +169,6 @@ apiRouter.put("/user/name", async (req, res) => {
   }
 
   try {
-    // Update in Cognito
     await cognitoClient.send(
       new UpdateUserAttributesCommand({
         AccessToken: req.token,
@@ -179,7 +176,6 @@ apiRouter.put("/user/name", async (req, res) => {
       })
     );
 
-    // Update in Supabase DB
     const { error } = await supabase
       .from("users")
       .update({ user_name: name })
@@ -213,7 +209,29 @@ apiRouter.get("/my-referrals", async (req, res) => {
   }
 });
 
-// In server.js
+// --- NEW SEARCH ENDPOINT ---
+apiRouter.get("/referrals/search", async (req, res) => {
+  const { q } = req.query;
+  if (!q) {
+    return res.status(400).json({ error: "Search query 'q' is required." });
+  }
+
+  try {
+    // Using .or() to search in both ref_name and ref_desc
+    // 'ilike' is for case-insensitive search
+    const { data, error } = await supabase
+      .from("referrals")
+      .select(`*, users (user_name)`)
+      .or(`ref_name.ilike.%${q}%,ref_desc.ilike.%${q}%`)
+      .order("ref_created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ message: "success", data });
+  } catch (error) {
+    console.error("Failed to search referrals:", error);
+    res.status(500).json({ error: "Database search error" });
+  }
+});
 
 apiRouter.get("/referrals", async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
@@ -223,13 +241,7 @@ apiRouter.get("/referrals", async (req, res) => {
   try {
     const { data, error, count } = await supabase
       .from("referrals")
-      .select(
-        `
-            *,
-            users ( user_name )
-        `,
-        { count: "exact" }
-      )
+      .select(`*, users ( user_name )`, { count: "exact" })
       .order("ref_created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -279,7 +291,6 @@ apiRouter.post("/referrals", async (req, res) => {
   const { sub } = req.user;
 
   try {
-    // Get user attributes from Cognito
     const { UserAttributes } = await cognitoClient.send(
       new GetUserCommand({ AccessToken: req.token })
     );
@@ -290,7 +301,6 @@ apiRouter.post("/referrals", async (req, res) => {
     const name = nameAttribute ? nameAttribute.Value : "N/A";
     const email = emailAttribute ? emailAttribute.Value : "N/A";
 
-    // Check if the user exists in Supabase, and if not, create them
     let { data: user, error: userError } = await supabase
       .from("users")
       .select("user_sub")
@@ -298,7 +308,6 @@ apiRouter.post("/referrals", async (req, res) => {
       .single();
 
     if (userError && userError.code === "PGRST116") {
-      // User does not exist, so create them
       const { data: newUser, error: newUserError } = await supabase
         .from("users")
         .insert([
@@ -405,10 +414,8 @@ apiRouter.delete("/referrals/:id", async (req, res) => {
   }
 });
 
-// Apply the protected router to the /api path
 app.use("/api", apiRouter);
 
-// A simple root route to confirm the server is running
 app.get("/", (req, res) => {
   res.send("refr.io backend is running!");
 });

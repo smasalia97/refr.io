@@ -1,3 +1,4 @@
+// smasalia97/refr.io/refr.io-refr-frontend/refr-io/public/js/app.js
 document.addEventListener("DOMContentLoaded", () => {
   const referralsList = document.getElementById("referrals-list");
   const loadingMessage = document.getElementById("loading-message");
@@ -8,11 +9,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logout-btn");
   const userMenuButton = document.getElementById("user-menu-button");
   const userMenu = document.getElementById("user-menu");
+  const searchInput = document.getElementById("search-input");
+  const paginationControls = document.getElementById("pagination-controls");
 
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
   let currentPage = 1;
   let totalPages = 1;
+  let searchTimeout;
 
   const prevButton = document.getElementById("prev-page");
   const nextButton = document.getElementById("next-page");
@@ -75,9 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // In public/js/app.js
-  // At the top of app.js and profile.js
-
   const capitalizeName = (name) => {
     if (!name) return "";
     return name
@@ -87,12 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const createReferralCard = (ref) => {
-    const categoryClasses = getCategoryClasses(ref.ref_category);
     const descriptionHTML = ref.ref_desc
       ? `<p class="text-sm text-gray-600 mt-1">${ref.ref_desc}</p>`
       : "";
-
-    // Add the user_name to the card if it exists
     const userNameHTML =
       ref.users && ref.users.user_name
         ? `<div class="text-sm font-semibold text-gray-800 mb-2">${capitalizeName(
@@ -101,22 +99,42 @@ document.addEventListener("DOMContentLoaded", () => {
         : "";
 
     return `
-            <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">
-                ${userNameHTML}
+      <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">
+          ${userNameHTML}
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4">
+              <div class="flex-grow">
+                  <a href="${
+                    ref.ref_link
+                  }" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${
+      ref.ref_name
+    }</h2></a>
+                  ${descriptionHTML}
+              </div>
+              <div class="w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4">
+                  <span class="${getCategoryClasses(
+                    ref.ref_category
+                  )} text-xs font-medium px-3 py-1 rounded-full">${
+      ref.ref_category
+    }</span>
+                  <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${
+                    ref.ref_link
+                  }">Copy Link</button>
+              </div>
+          </div>
+      </div>`;
+  };
 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4">
-                    <div class="flex-grow">
-                        <a href="${ref.ref_link}" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${ref.ref_name}</h2></a>
-                        ${descriptionHTML}
-                    </div>
-      
-                    <div class="w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4">
-              
-                        <span class="${categoryClasses} text-xs font-medium px-3 py-1 rounded-full">${ref.ref_category}</span>
-                        <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${ref.ref_link}">Copy Link</button>
-                    </div>
-                </div>
-            </div>`;
+  const renderReferrals = (referrals) => {
+    loadingMessage.style.display = "none";
+    referralsList.innerHTML = "";
+    if (referrals && referrals.length > 0) {
+      referrals.forEach((ref) => {
+        referralsList.insertAdjacentHTML("beforeend", createReferralCard(ref));
+      });
+    } else {
+      referralsList.innerHTML =
+        '<p class="text-gray-500 text-center">No referrals found.</p>';
+    }
   };
 
   const updatePaginationControls = () => {
@@ -130,6 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingMessage.textContent = "Please log in to see referrals.";
       return;
     }
+    paginationControls.style.display = "flex"; // Show pagination
     try {
       const response = await fetch(`${API_URL}/api/referrals?page=${page}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -137,28 +156,51 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!response.ok) throw new Error("Network response was not ok");
       const result = await response.json();
 
-      loadingMessage.style.display = "none";
-      referralsList.innerHTML = "";
-
-      if (result.data && result.data.length > 0) {
-        result.data.forEach((ref) => {
-          referralsList.insertAdjacentHTML(
-            "beforeend",
-            createReferralCard(ref)
-          );
-        });
-        totalPages = result.totalPages;
-        updatePaginationControls();
-      } else {
-        referralsList.innerHTML =
-          '<p class="text-gray-500 text-center">No referrals posted yet. Be the first!</p>';
-        document.getElementById("pagination-controls").style.display = "none";
-      }
+      renderReferrals(result.data);
+      totalPages = result.totalPages;
+      updatePaginationControls();
     } catch (error) {
       console.error("Error fetching referrals:", error);
       loadingMessage.textContent = "Failed to load referrals.";
     }
   };
+
+  const searchReferrals = async (query) => {
+    if (!accessToken) return;
+    loadingMessage.style.display = "block";
+    referralsList.innerHTML = "";
+    paginationControls.style.display = "none"; // Hide pagination during search
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/referrals/search?q=${encodeURIComponent(query)}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      if (!response.ok) throw new Error("Search request failed");
+      const result = await response.json();
+      renderReferrals(result.data);
+    } catch (error) {
+      console.error("Error searching referrals:", error);
+      loadingMessage.textContent = "Failed to load search results.";
+    }
+  };
+
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query) {
+      searchTimeout = setTimeout(() => {
+        searchReferrals(query);
+      }, 300); // Debounce requests by 300ms
+    } else {
+      // If search is cleared, fetch the first page of all referrals
+      currentPage = 1;
+      fetchAndRenderReferrals(currentPage);
+    }
+  });
 
   referralsList.addEventListener("click", function (event) {
     const copyButton = event.target.closest(".copy-link-btn");
@@ -169,7 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
           copyButton.textContent = "Copy Link";
         }, 2000);
       });
-      return;
     }
   });
 
@@ -211,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchAndRenderReferrals(currentPage);
     } else {
       loadingMessage.textContent = "Please log in to see referrals.";
+      paginationControls.style.display = "none";
     }
   };
 

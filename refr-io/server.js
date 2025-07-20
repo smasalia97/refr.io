@@ -1,4 +1,3 @@
-// smasalia97/refr.io/refr.io-refr-frontend/refr-io/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -10,6 +9,7 @@ const {
   InitiateAuthCommand,
   GetUserCommand,
   UpdateUserAttributesCommand,
+  ChangePasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 
@@ -187,6 +187,31 @@ apiRouter.put("/user/name", async (req, res) => {
   } catch (error) {
     console.error("Failed to update name:", error);
     res.status(500).json({ error: "Failed to update name." });
+  }
+});
+
+// --- NEW ROUTE for changing password ---
+apiRouter.put("/user/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "All password fields are required." });
+  }
+
+  try {
+    await cognitoClient.send(
+      new ChangePasswordCommand({
+        AccessToken: req.token, // Provided by the verifyToken middleware
+        PreviousPassword: currentPassword,
+        ProposedPassword: newPassword,
+      })
+    );
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Failed to change password:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to change password." });
   }
 });
 

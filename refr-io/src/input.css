@@ -11,8 +11,12 @@
   @apply w-16 h-16 rounded-full inline-flex items-center justify-center text-2xl font-bold;
 }
 
-/* In src/input.css */
-
 .contact-input {
   @apply block w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm;
+}
+
+@layer components {
+  .skeleton-card {
+    @apply bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm animate-pulse;
+  }
 }

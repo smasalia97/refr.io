@@ -123,8 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!response.ok) throw new Error("Failed to fetch your referrals.");
       const result = await response.json();
 
-      myReferralsLoading.style.display = "none";
-      myReferralsList.innerHTML = "";
+      myReferralsList.innerHTML = ""; // Clear the skeletons
 
       if (result.data && result.data.length > 0) {
         result.data.forEach((ref) => {
@@ -137,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         myReferralsList.innerHTML = `<p class="text-gray-500">You haven't posted any referrals yet.</p>`;
       }
     } catch (error) {
-      myReferralsLoading.textContent = error.message;
+      myReferralsList.innerHTML = `<p class="text-red-600 text-center">${error.message}</p>`;
     }
   };
 

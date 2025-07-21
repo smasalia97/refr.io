@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const renderReferrals = (referrals) => {
-    loadingMessage.style.display = "none";
+    // This function will now clear the skeletons before rendering
     referralsList.innerHTML = "";
     if (referrals && referrals.length > 0) {
       referrals.forEach((ref) => {
@@ -158,8 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     paginationControls.style.display = "flex";
-    loadingMessage.style.display = "block";
-    referralsList.innerHTML = "";
+    // loadingMessage.style.display = "block";
+    // referralsList.innerHTML = "";
 
     const category = filterCategory.value;
 
@@ -186,7 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
       updatePaginationControls();
     } catch (error) {
       console.error("Error fetching referrals:", error);
-      loadingMessage.textContent = "Failed to load referrals.";
+      referralsList.innerHTML =
+        '<p class="text-red-600 text-center">Failed to load referrals.</p>';
     }
   };
 
@@ -229,7 +230,8 @@ document.addEventListener("DOMContentLoaded", () => {
       renderReferrals(result.data);
     } catch (error) {
       console.error("Error searching referrals:", error);
-      loadingMessage.textContent = "Failed to load search results.";
+      referralsList.innerHTML =
+        '<p class="text-red-600 text-center">Failed to load search results.</p>';
     }
   };
 

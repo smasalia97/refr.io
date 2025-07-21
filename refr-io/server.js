@@ -14,6 +14,7 @@ const {
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 const { signupValidationRules, validate } = require("./middleware/validators");
+const axios = require("axios");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -327,10 +328,44 @@ apiRouter.get("/referrals/:id", async (req, res) => {
   }
 });
 
+// --- NEW: Helper function to check URL with Google Safe Browse ---
+const isUrlSafe = async (url) => {
+  const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
+  if (!apiKey) {
+    console.warn("Google Safe Browse API key not found. Skipping check.");
+    return true; // Fail open if the key is not configured
+  }
+  const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+
+  try {
+    const response = await axios.post(apiUrl, {
+      client: { clientId: "refr-io", clientVersion: "1.0.0" },
+      threatInfo: {
+        threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+        platformTypes: ["ANY_PLATFORM"],
+        threatEntryTypes: ["URL"],
+        threatEntries: [{ url: url }],
+      },
+    });
+    // If the response body has a "matches" array, the URL is unsafe.
+    return !response.data.matches;
+  } catch (error) {
+    console.error("Error checking URL with Safe Browse API:", error.message);
+    return true; // Fail open (allow URL) in case of an API error
+  }
+};
+
 apiRouter.post("/referrals", async (req, res) => {
   const { title, link, description, category } = req.body;
   if (!title || !link || !category)
     return res.status(400).json({ error: "Missing required fields" });
+
+  const isSafe = await isUrlSafe(link);
+  if (!isSafe) {
+    return res.status(400).json({
+      error: "This link is flagged as unsafe and cannot be submitted.",
+    });
+  }
 
   const { sub } = req.user;
 
@@ -403,6 +438,15 @@ apiRouter.put("/referrals/:id", async (req, res) => {
 
   if (!title || !link || !category) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const isSafe = await isUrlSafe(link);
+  if (!isSafe) {
+    return res
+      .status(400)
+      .json({
+        error: "This link is flagged as unsafe and cannot be submitted.",
+      });
   }
 
   try {

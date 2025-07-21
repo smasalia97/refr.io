@@ -329,55 +329,49 @@ apiRouter.get("/referrals/:id", async (req, res) => {
 });
 
 // --- NEW: Helper function to check URL with Google Safe Browse ---
-// smasalia97/refr.io/refr.io-refr-frontend/refr-io/server.js
 
 const isUrlSafe = async (url) => {
-  const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
+    const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
+    
+    console.log("--- Starting URL Safety Check ---");
+    console.log("URL to check:", url);
 
-  console.log("--- Starting URL Safety Check ---");
-  console.log("URL to check:", url);
-
-  if (!apiKey) {
-    console.log("API Key is MISSING. Skipping check and allowing URL.");
-    return true;
-  }
-  console.log("API Key found.");
-
-  const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
-
-  try {
-    console.log("Sending request to Google Safe Browse API...");
-    const response = await axios.post(apiUrl, {
-      client: { clientId: "refr-io", clientVersion: "1.0.0" },
-      threatInfo: {
-        threatTypes: [
-          "MALWARE",
-          "SOCIAL_ENGINEERING",
-          "UNWANTED_SOFTWARE",
-          "POTENTIALLY_HARMFUL_APPLICATION",
-        ],
-        platformTypes: ["ANY_PLATFORM"],
-        threatEntryTypes: ["URL"],
-        threatEntries: [{ url: url }],
-      },
-    });
-    console.log("API Response received.");
-
-    if (response.data && response.data.matches) {
-      console.log("Result: Unsafe. Found matches:", response.data.matches);
-      return false;
-    } else {
-      console.log("Result: Safe. No matches found.");
-      return true;
+    if (!apiKey) {
+        console.log("API Key is MISSING. Skipping check and allowing URL.");
+        return true;
     }
-  } catch (error) {
-    console.error(
-      "API Error:",
-      error.response ? error.response.data : error.message
-    );
-    console.log("Result: Failing open due to API error. Allowing URL.");
-    return true;
-  }
+    console.log("API Key found.");
+
+    // --- THIS IS THE CORRECTED LINE ---
+    const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+    
+    console.log("Attempting to call API at:", apiUrl);
+
+    try {
+        console.log("Sending request to Google Safe Browse API...");
+        const response = await axios.post(apiUrl, {
+            client: { clientId: "refr-io", clientVersion: "1.0.0" },
+            threatInfo: {
+                threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+                platformTypes: ["ANY_PLATFORM"],
+                threatEntryTypes: ["URL"],
+                threatEntries: [{ url: url }]
+            }
+        });
+        console.log("API Response received.");
+
+        if (response.data && response.data.matches) {
+            console.log("Result: Unsafe. Found matches:", response.data.matches);
+            return false;
+        } else {
+            console.log("Result: Safe. No matches found.");
+            return true;
+        }
+    } catch (error) {
+        console.error("API Error:", error.response ? error.response.data : error.message);
+        console.log("Result: Failing open due to API error. Allowing URL.");
+        return true; 
+    }
 };
 
 apiRouter.post("/referrals", async (req, res) => {

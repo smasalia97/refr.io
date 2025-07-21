@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - refr.io</title>
 
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png?v=1.1">
+    <link rel="icon" href="icon/favicon.ico?v=1.1" type="image/x-icon">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +19,15 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Style for password criteria list */
+        .password-criteria li {
+            transition: color 0.2s ease-in-out;
+        }
     </style>
+
+    <meta name="description"
+        content="Create your refr.io account in seconds. Join a community of users sharing the best referral codes and start earning rewards today.">
 </head>
 
 <body class="antialiased text-gray-800">
@@ -58,6 +71,14 @@
                         <input type="password" name="password" id="password" autocomplete="new-password"
                             class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
                             required>
+                    </div>
+                    <div id="password-criteria-container" class="hidden">
+                        <ul class="text-sm text-gray-500 space-y-1 mt-2 password-criteria">
+                            <li id="length-check">At least 8 characters</li>
+                            <li id="case-check">An uppercase &amp; lowercase letter</li>
+                            <li id="number-check">At least one number</li>
+                            <li id="symbol-check">At least one special character (!@#$...)</li>
+                        </ul>
                     </div>
                     <div>
                         <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm
@@ -104,7 +125,9 @@
         </div>
     </main>
 
-    <script src="js/config.js"></script>
+    <div id="toast-container"></div>
+    <script src="js/utils.js" defer></script>
+    <script src="js/config.js" defer></script>
     <script src="js/signup.js" defer></script>
 </body>
 

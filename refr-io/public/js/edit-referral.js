@@ -16,6 +16,95 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const categoryKeywords = {
+    Finance: [
+      "card",
+      "credit",
+      "apr",
+      "points",
+      "rewards",
+      "invest",
+      "stock",
+      "crypto",
+      "bank",
+      "loan",
+      "robinhood",
+      "wealthfront",
+    ],
+
+    Food: [
+      "food",
+      "delivery",
+      "restaurant",
+      "doordash",
+      "uber eats",
+      "grubhub",
+      "meal",
+      "dining",
+    ],
+    Shopping: ["shop", "store", "discount", "sale", "rakuten", "retail"],
+    Travel: [
+      "travel",
+      "hotel",
+      "motel",
+      "airbnb",
+      "flight",
+      "booking",
+      "vacation",
+      "trip",
+      "tour",
+      "journey",
+    ],
+    Services: [
+      "service",
+      "software",
+      "notion",
+      "subscription",
+      "tool",
+      "app",
+      "platform",
+    ],
+    Software: [
+      "saas",
+      "software",
+      "notion",
+      "dropbox",
+      "app",
+      "tool",
+      "platform",
+      "service",
+      "subscription",
+    ],
+    Gaming: [
+      "game",
+      "gaming",
+      "steam",
+      "console",
+      "xbox",
+      "playstation",
+      "nintendo",
+      "pc",
+    ],
+  };
+
+  const suggestCategory = () => {
+    const title = titleInput.value.toLowerCase();
+    const description = descriptionInput.value.toLowerCase();
+    const text = `${title} ${description}`;
+
+    for (const category in categoryKeywords) {
+      if (
+        categoryKeywords[category].some((keyword) => text.includes(keyword))
+      ) {
+        categoryInput.value = category;
+        return;
+      }
+    }
+  };
+
+  titleInput.addEventListener("input", suggestCategory);
+  descriptionInput.addEventListener("input", suggestCategory);
+
   const fetchReferralData = async () => {
     if (!accessToken) {
       messageEl.textContent = "You must be logged in to edit a referral.";
@@ -64,16 +153,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        messageEl.textContent = "Update successful! Redirecting...";
-        messageEl.className = "text-green-600 text-center mt-4";
+        showToast("Referral updated successfully!");
         setTimeout(() => (window.location.href = "/profile.html"), 1500);
       } else {
         const errorResult = await response.json();
         throw new Error(errorResult.error || "Failed to update referral.");
       }
     } catch (error) {
-      messageEl.textContent = error.message;
-      messageEl.className = "text-red-600 text-center mt-4";
+      showToast(error.message, "error");
     }
   });
 

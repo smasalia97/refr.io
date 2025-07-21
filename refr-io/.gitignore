@@ -1,9 +1,6 @@
 # Node modules
 /node_modules/
 
-# Local SQLite database file
-/db/refr.db
-
 # Compiled Tailwind output (auto-generated)
 /public/style.css
 
@@ -19,5 +16,3 @@ yarn-error.log*
 # Environment variables (for future secret config)
 .env
 .env.*
-
-todo.txt

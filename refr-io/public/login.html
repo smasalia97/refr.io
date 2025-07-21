@@ -5,7 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - refr.io</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png?v=1.1">
+    <link rel="icon" href="icon/favicon.ico?v=1.1" type="image/x-icon">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +20,9 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
+
+    <meta name="description"
+        content="Welcome back! Log in to your refr.io account to manage your referrals, discover new offers, and track your rewards.">
 </head>
 
 <body class="antialiased text-gray-800">
@@ -53,7 +61,8 @@
                         required>
                 </div>
                 <div class="flex items-center">
-                    <input id="show-password" name="show-password" type="checkbox" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                    <input id="show-password" name="show-password" type="checkbox"
+                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
                     <label for="show-password" class="ml-2 block text-sm text-gray-900">Show Password</label>
                 </div>
 
@@ -71,10 +80,13 @@
             </p>
         </div>
     </main>
-    <script src="js/config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.12/dist/amazon-cognito-identity.min.js"></script>
-
-<script src="js/login.js" defer></script>
+    
+    <div id="toast-container"></div>
+    <script src="js/utils.js" defer></script>
+    <script src="js/config.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.12/dist/amazon-cognito-identity.min.js"
+        defer></script>
+    <script src="js/login.js" defer></script>
 </body>
 
 </html>

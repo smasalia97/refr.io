@@ -15,7 +15,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const newNameInput = document.getElementById("new-name");
   const editNameMessage = document.getElementById("edit-name-message");
 
-  const API_URL = "http://localhost:3000";
+  const changePasswordModal = document.getElementById("change-password-modal");
+  const changePasswordForm = document.getElementById("change-password-form");
+  const cancelChangePasswordBtn = document.getElementById(
+    "cancel-change-password-btn"
+  );
+  const changePasswordMessage = document.getElementById(
+    "change-password-message"
+  );
+
   const accessToken = localStorage.getItem("accessToken");
   let referralToDelete = { id: null, element: null };
 
@@ -26,6 +34,16 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "/";
       });
     }
+  };
+
+  // At the top of app.js and profile.js
+
+  const capitalizeName = (name) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const fetchProfile = async () => {
@@ -51,27 +69,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = nameAttribute ? nameAttribute.Value : "N/A";
       const email = emailAttribute ? emailAttribute.Value : "N/A";
+      const createdAt = userData.user_created_at
+        ? new Date(userData.user_created_at).toLocaleDateString()
+        : "N/A";
 
       loadingMessage.style.display = "none";
       profileDetails.innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900">Name</h3>
-                            <p class="text-gray-600">${name}</p>
-                        </div>
-                        <button id="edit-name-btn" class="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</button>
-                    </div>
+            <div class="space-y-4">
+                <div class="sm:flex sm:justify-between sm:items-center">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">Email</h3>
-                        <p class="text-gray-600">${email}</p>
+                        <h3 class="text-lg font-medium text-gray-900">Name</h3>
+                        <p class="text-gray-600">${name}</p>
                     </div>
-                </div>`;
+                    <button id="edit-name-btn" class="mt-2 sm:mt-0 bg-gray-100 text-gray-700 font-semibold px-4 py-2 rounded-lg hover:bg-gray-200">Edit Name</button>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Email <span class="text-sm font-normal text-gray-500">(cannot be changed)</span></h3>
+                    <p class="text-gray-600">${email}</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Member Since</h3>
+                    <p class="text-gray-600">${createdAt}</p>
+                </div>
+                <div class="pt-4 border-t border-slate-200">
+                     <button id="change-password-btn" class="bg-gray-100 text-gray-700 font-semibold px-4 py-2 rounded-lg hover:bg-gray-200">Change Password</button>
+                </div>
+            </div>`;
 
       document.getElementById("edit-name-btn").addEventListener("click", () => {
         newNameInput.value = name;
         editNameModal.classList.remove("hidden");
       });
+
+      // --- NEW: Event listener for the new button ---
+      document
+        .getElementById("change-password-btn")
+        .addEventListener("click", () => {
+          changePasswordForm.reset();
+          changePasswordMessage.textContent = "";
+          changePasswordModal.classList.remove("hidden");
+        });
     } catch (error) {
       loadingMessage.textContent = error.message;
     }
@@ -86,8 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!response.ok) throw new Error("Failed to fetch your referrals.");
       const result = await response.json();
 
-      myReferralsLoading.style.display = "none";
-      myReferralsList.innerHTML = "";
+      myReferralsList.innerHTML = ""; // Clear the skeletons
 
       if (result.data && result.data.length > 0) {
         result.data.forEach((ref) => {
@@ -100,21 +136,23 @@ document.addEventListener("DOMContentLoaded", () => {
         myReferralsList.innerHTML = `<p class="text-gray-500">You haven't posted any referrals yet.</p>`;
       }
     } catch (error) {
-      myReferralsLoading.textContent = error.message;
+      myReferralsList.innerHTML = `<p class="text-red-600 text-center">${error.message}</p>`;
     }
   };
+
+  // In public/js/profile.js
 
   const createMyReferralCard = (ref) => {
     return `
             <div class="referral-card bg-white border border-slate-200 rounded-xl p-5" data-id="${ref.ref_id}">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h3 class="font-semibold text-gray-800">${ref.ref_name}</h3>
                         <a href="${ref.ref_link}" class="text-sm text-brand-green hover:underline" target="_blank">${ref.ref_link}</a>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <a href="/edit-referral.html?id=${ref.ref_id}" class="edit-btn bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</a>
-                        <button class="delete-btn bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg hover:bg-red-200">Delete</button>
+                    <div class="flex-shrink-0 w-full sm:w-auto flex items-center gap-2 mt-2 sm:mt-0">
+                        <a href="/edit-referral.html?id=${ref.ref_id}" class="flex-1 sm:flex-none text-center edit-btn bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-200">Edit</a>
+                        <button class="flex-1 sm:flex-none delete-btn bg-red-100 text-red-700 font-semibold px-4 py-2 rounded-lg hover:bg-red-200">Delete</button>
                     </div>
                 </div>
             </div>`;
@@ -142,12 +180,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         element.remove();
+        showToast("Referral deleted successfully."); // <-- ADD THIS
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to delete referral.");
       }
     } catch (error) {
-      alert(error.message);
+      showToast(error.message, "error"); // <-- REPLACE alert()
     } finally {
       closeDeleteModal();
     }
@@ -185,8 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        editNameMessage.textContent = "Name updated successfully!";
-        editNameMessage.className = "text-green-600 text-center mt-4";
+        showToast("Name updated successfully!"); // <-- REPLACE messageEl
         setTimeout(() => {
           editNameModal.classList.add("hidden");
           fetchProfile();
@@ -196,8 +234,51 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Failed to update name");
       }
     } catch (error) {
-      editNameMessage.textContent = error.message;
-      editNameMessage.className = "text-red-600 text-center mt-4";
+      showToast(error.message, "error"); // <-- REPLACE messageEl
+    }
+  });
+
+  cancelChangePasswordBtn.addEventListener("click", () => {
+    changePasswordModal.classList.add("hidden");
+  });
+
+  changePasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    changePasswordMessage.textContent = "";
+
+    const currentPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmNewPassword = document.getElementById(
+      "confirm-new-password"
+    ).value;
+
+    if (newPassword !== confirmNewPassword) {
+      changePasswordMessage.textContent = "New passwords do not match.";
+      changePasswordMessage.className = "text-red-600 text-center mt-4";
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/user/change-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (response.ok) {
+        showToast("Password updated successfully!"); // <-- REPLACE messageEl
+        setTimeout(() => {
+          changePasswordModal.classList.add("hidden");
+        }, 2000);
+      } else {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to update password");
+      }
+    } catch (error) {
+      showToast(error.message, "error"); // <-- REPLACE messageEl
     }
   });
 

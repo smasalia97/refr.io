@@ -4,8 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post a Referral - refr.io</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>refr.io - Share & Find Referrals</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png?v=1.1">
+    <link rel="icon" href="icon/favicon.ico?v=1.1" type="image/x-icon">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +20,9 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
+
+    <meta name="description"
+        content="Have a referral link to share? Post it on refr.io and help others discover great deals on services, credit cards, and more.">
 </head>
 
 <body class="antialiased text-gray-800">
@@ -29,7 +37,7 @@
                         d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                         clip-rule="evenodd" />
                 </svg>
-                Back to Dashboard
+                <span>Back</span><span class="hidden sm:inline"> to Dashboard</span>
             </a>
         </div>
     </header>
@@ -60,13 +68,15 @@
                     <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
                     <div class="mt-1 relative">
                         <select id="category" name="category"
-                            class="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] pr-10 transition duration-200 ease-in-out"
+                            class="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] pr-10 transition duration-200 ease-in-out"
                             required>
-                            <option>Credit Card</option>
+                            <option>Finance</option>
                             <option>Food</option>
                             <option>Shopping</option>
                             <option>Travel</option>
                             <option>Services</option>
+                            <option>Software</option>
+                            <option>Gaming</option>
                             <option>Other</option>
                         </select>
                         <div
@@ -87,7 +97,11 @@
             <p id="form-message" class="text-center mt-4"></p>
         </div>
     </main>
-    <script src="js/config.js"></script>
+
+    <div id="toast-container"></div>
+    <script src="js/utils.js" defer></script>
+    <script src="js/config.js" defer></script>
+    <script src="https://unpkg.com/compromise"></script>
     <script src="js/post.js" defer></script>
 </body>
 

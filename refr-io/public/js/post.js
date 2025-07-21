@@ -1,8 +1,100 @@
 document.addEventListener("DOMContentLoaded", () => {
   const postForm = document.getElementById("post-form");
   const messageEl = document.getElementById("form-message");
+  const titleInput = document.getElementById("title");
+  const descriptionInput = document.getElementById("description");
+  const categoryInput = document.getElementById("category");
 
   if (!postForm) return;
+
+  const categoryKeywords = {
+    Finance: [
+      "card",
+      "credit",
+      "apr",
+      "points",
+      "rewards",
+      "invest",
+      "stock",
+      "crypto",
+      "bank",
+      "loan",
+      "robinhood",
+      "wealthfront",
+    ],
+
+    Food: [
+      "food",
+      "delivery",
+      "restaurant",
+      "doordash",
+      "uber eats",
+      "grubhub",
+      "meal",
+      "dining",
+    ],
+    Shopping: ["shop", "store", "discount", "sale", "rakuten", "retail"],
+    Travel: [
+      "travel",
+      "hotel",
+      "motel",
+      "airbnb",
+      "flight",
+      "booking",
+      "vacation",
+      "trip",
+      "tour",
+      "journey",
+    ],
+    Services: [
+      "service",
+      "software",
+      "notion",
+      "subscription",
+      "tool",
+      "app",
+      "platform",
+    ],
+    Software: [
+      "saas",
+      "software",
+      "notion",
+      "dropbox",
+      "app",
+      "tool",
+      "platform",
+      "service",
+      "subscription",
+    ],
+    Gaming: [
+      "game",
+      "gaming",
+      "steam",
+      "console",
+      "xbox",
+      "playstation",
+      "nintendo",
+      "pc",
+    ],
+  };
+
+  const suggestCategory = () => {
+    const title = titleInput.value.toLowerCase();
+    const description = descriptionInput.value.toLowerCase();
+    const text = `${title} ${description}`;
+
+    for (const category in categoryKeywords) {
+      if (
+        categoryKeywords[category].some((keyword) => text.includes(keyword))
+      ) {
+        categoryInput.value = category;
+        return;
+      }
+    }
+  };
+
+  titleInput.addEventListener("input", suggestCategory);
+  descriptionInput.addEventListener("input", suggestCategory);
 
   postForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -31,11 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        messageEl.textContent =
-          "Referral submitted successfully! Redirecting...";
-        messageEl.classList.add("text-green-600");
+        showToast("Referral saved successfully!");
         setTimeout(() => {
-          // Redirect to the dashboard, not the landing page
           window.location.href = "/dashboard.html";
         }, 2000);
       } else {
@@ -44,8 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      messageEl.textContent = error.message;
-      messageEl.classList.add("text-red-600");
+      showToast(error.message, "error");
     }
   });
 });

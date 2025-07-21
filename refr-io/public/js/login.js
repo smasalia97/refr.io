@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Define the backend server URL
-  const API_URL = "http://localhost:3000";
-
   const loginForm = document.getElementById("login-form");
   const formMessage = document.getElementById("form-message");
   const passwordField = document.getElementById("password");
@@ -43,8 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.error || "Login failed");
         }
       } catch (error) {
-        formMessage.textContent = error.message;
-        formMessage.className = "text-red-600 text-center mt-4";
+        showToast(error.message, "error");
       }
     });
   }

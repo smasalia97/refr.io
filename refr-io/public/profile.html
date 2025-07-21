@@ -4,8 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Profile - refr.io</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>refr.io - Share & Find Referrals</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png?v=1.1">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png?v=1.1">
+    <link rel="icon" href="icon/favicon.ico?v=1.1" type="image/x-icon">
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,7 +35,7 @@
                             d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                             clip-rule="evenodd" />
                     </svg>
-                    Back to Dashboard
+                    <span>Back</span><span class="hidden sm:inline"> to Dashboard</span>
                 </a>
                 <button id="logout-btn"
                     class="font-semibold text-gray-600 hover:text-brand-green transition-colors">Logout</button>
@@ -45,8 +50,9 @@
         </div>
     </main>
 
-    <div id="edit-name-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div id="edit-name-modal"
+        class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center p-4">
+        <div class="relative w-full max-w-md p-5 border shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 text-center">Edit Your Name</h3>
                 <form id="edit-name-form" class="space-y-4 mt-4">
@@ -67,15 +73,70 @@
         </div>
     </div>
 
+    <div id="change-password-modal"
+        class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center p-4">
+        <div class="relative w-full max-w-md p-5 border shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 text-center">Change Password</h3>
+                <form id="change-password-form" class="space-y-4 mt-4">
+                    <div>
+                        <label for="current-password" class="block text-sm font-medium text-gray-700">Current
+                            Password</label>
+                        <input type="password" name="current-password" id="current-password"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
+                        <input type="password" name="new-password" id="new-password"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="confirm-new-password" class="block text-sm font-medium text-gray-700">Confirm New
+                            Password</label>
+                        <input type="password" name="confirm-new-password" id="confirm-new-password"
+                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm" required>
+                    </div>
+                    <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-green text-base font-medium text-white hover:bg-emerald-700 sm:ml-3 sm:w-auto sm:text-sm">Update
+                            Password</button>
+                        <button type="button" id="cancel-change-password-btn"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                    </div>
+                </form>
+                <p id="change-password-message" class="text-center mt-4"></p>
+            </div>
+        </div>
+    </div>
+
+
     <section class="max-w-5xl mx-auto p-4 md:p-8">
         <h2 class="text-xl font-semibold text-gray-900 mt-2 mb-6">Your Referrals</h2>
         <div id="my-referrals-list" class="space-y-4">
-            <p id="my-referrals-loading" class="text-gray-500">Loading your referrals...</p>
+            <div class="skeleton-card">
+                <div class="flex justify-between items-center">
+                    <div class="space-y-2 w-3/5">
+                        <div class="h-5 bg-slate-200 rounded w-4/5"></div>
+                        <div class="h-4 bg-slate-200 rounded w-full"></div>
+                    </div>
+                    <div class="h-10 bg-slate-200 rounded w-32"></div>
+                </div>
+            </div>
+            <div class="skeleton-card">
+                <div class="flex justify-between items-center">
+                    <div class="space-y-2 w-3/5">
+                        <div class="h-5 bg-slate-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+                    </div>
+                    <div class="h-10 bg-slate-200 rounded w-32"></div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <div id="delete-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div id="delete-modal"
+        class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center p-4">
+        <div class="relative w-full max-w-md p-5 border shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                     <svg class="h-6 w-6 text-red-600" viewBox="0 0 24 24">
@@ -96,7 +157,9 @@
         </div>
     </div>
 
-    <script src="js/config.js"></script>
+    <div id="toast-container"></div>
+    <script src="js/utils.js" defer></script>
+    <script src="js/config.js" defer></script>
     <script src="js/profile.js" defer></script>
 </body>
 

@@ -263,12 +263,26 @@ apiRouter.get("/referrals", async (req, res) => {
   const limit = 10;
   const offset = (page - 1) * limit;
 
+  // REMOVED: sortBy is no longer needed
+  const { category } = req.query;
+
   try {
-    const { data, error, count } = await supabase
+    let query = supabase
       .from("referrals")
-      .select(`*, users ( user_name )`, { count: "exact" })
-      .order("ref_created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .select(`*, users ( user_name )`, { count: "exact" });
+
+    // Apply category filter if it exists
+    if (category) {
+      query = query.eq("ref_category", category);
+    }
+
+    // Default sort by newest
+    query = query.order("ref_created_at", { ascending: false });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
     res.json({

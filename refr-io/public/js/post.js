@@ -123,9 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        messageEl.textContent =
-          "Referral submitted successfully! Redirecting...";
-        messageEl.classList.add("text-green-600");
+        showToast("Referral saved successfully!");
         setTimeout(() => {
           window.location.href = "/dashboard.html";
         }, 2000);
@@ -135,8 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      messageEl.textContent = error.message;
-      messageEl.classList.add("text-red-600");
+      showToast(error.message, "error");
     }
   });
 });

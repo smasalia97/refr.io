@@ -127,8 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Signup failed");
       }
     } catch (error) {
-      formMessage.textContent = error.message;
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast(error.message, 'error');
     }
   });
 
@@ -165,8 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Confirmation failed.");
       }
     } catch (error) {
-      formMessage.textContent = error.message;
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast(error.message, 'error');
     }
   });
 });

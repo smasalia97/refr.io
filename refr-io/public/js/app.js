@@ -254,12 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyButton = event.target.closest(".copy-link-btn");
     if (copyButton) {
       navigator.clipboard.writeText(copyButton.dataset.link).then(() => {
-        copyButton.textContent = "Copied!";
-        setTimeout(() => {
-          copyButton.textContent = "Copy Link";
-        }, 2000);
+        showToast("Link copied to clipboard!");
       });
     }
+    return;
   });
 
   if (logoutBtn)

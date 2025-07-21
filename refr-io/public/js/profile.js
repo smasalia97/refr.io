@@ -180,12 +180,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         element.remove();
+        showToast("Referral deleted successfully."); // <-- ADD THIS
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to delete referral.");
       }
     } catch (error) {
-      alert(error.message);
+      showToast(error.message, "error"); // <-- REPLACE alert()
     } finally {
       closeDeleteModal();
     }
@@ -223,8 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        editNameMessage.textContent = "Name updated successfully!";
-        editNameMessage.className = "text-green-600 text-center mt-4";
+        showToast("Name updated successfully!"); // <-- REPLACE messageEl
         setTimeout(() => {
           editNameModal.classList.add("hidden");
           fetchProfile();
@@ -234,8 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Failed to update name");
       }
     } catch (error) {
-      editNameMessage.textContent = error.message;
-      editNameMessage.className = "text-red-600 text-center mt-4";
+      showToast(error.message, "error"); // <-- REPLACE messageEl
     }
   });
 
@@ -270,8 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        changePasswordMessage.textContent = "Password updated successfully!";
-        changePasswordMessage.className = "text-green-600 text-center mt-4";
+        showToast("Password updated successfully!"); // <-- REPLACE messageEl
         setTimeout(() => {
           changePasswordModal.classList.add("hidden");
         }, 2000);
@@ -280,8 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Failed to update password");
       }
     } catch (error) {
-      changePasswordMessage.textContent = error.message;
-      changePasswordMessage.className = "text-red-600 text-center mt-4";
+      showToast(error.message, "error"); // <-- REPLACE messageEl
     }
   });
 

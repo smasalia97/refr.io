@@ -153,16 +153,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        messageEl.textContent = "Update successful! Redirecting...";
-        messageEl.className = "text-green-600 text-center mt-4";
+        showToast("Referral updated successfully!");
         setTimeout(() => (window.location.href = "/profile.html"), 1500);
       } else {
         const errorResult = await response.json();
         throw new Error(errorResult.error || "Failed to update referral.");
       }
     } catch (error) {
-      messageEl.textContent = error.message;
-      messageEl.className = "text-red-600 text-center mt-4";
+      showToast(error.message, "error");
     }
   });
 

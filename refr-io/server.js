@@ -1,49 +1,39 @@
 require("dotenv").config();
-
 const express = require("express");
-const path = require("path");
-const Database = require("better-sqlite3");
 const cors = require("cors");
+const { createClient } = require("@supabase/supabase-js");
 const {
   CognitoIdentityProviderClient,
   SignUpCommand,
   ConfirmSignUpCommand,
   InitiateAuthCommand,
   GetUserCommand,
-  UpdateUserAttributesCommand, // <-- Import added here
+  UpdateUserAttributesCommand,
+  ChangePasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
+const { signupValidationRules, validate } = require("./middleware/validators");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Middleware & Static Files ---
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "https://www.refrio.org",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+  ],
+};
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
 
-// --- Database Setup ---
-const dbPath = path.resolve(__dirname, "db", "refr.db");
-const db = new Database(dbPath);
-db.pragma("journal_mode = WAL"); // Helps prevent locking issues
+app.use(express.static("public"));
 
-db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        user_sub TEXT PRIMARY KEY,
-        user_name TEXT NOT NULL,
-        user_email TEXT NOT NULL UNIQUE
-    );
-    CREATE TABLE IF NOT EXISTS referrals (
-        ref_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_sub TEXT NOT NULL,
-        ref_name TEXT NOT NULL,
-        ref_link TEXT NOT NULL,
-        ref_desc TEXT,
-        ref_category TEXT NOT NULL,
-        ref_created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_sub) REFERENCES users (user_sub)
-    );
-`);
+// --- Supabase Client Setup ---
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Cognito Client ---
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -59,7 +49,7 @@ const calculateSecretHash = (username) => {
 
 // --- Public API Routes ---
 
-app.post("/api/signup", async (req, res) => {
+app.post("/api/signup", signupValidationRules(), validate, async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const { UserSub } = await cognitoClient.send(
@@ -74,9 +64,20 @@ app.post("/api/signup", async (req, res) => {
         ],
       })
     );
-    db.prepare(
-      "INSERT INTO users (user_sub, user_name, user_email) VALUES (?, ?, ?)"
-    ).run(UserSub, name, email);
+
+    const { error } = await supabase.from("users").insert([
+      {
+        user_sub: UserSub,
+        user_name: name,
+        user_email: email,
+        user_created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) {
+      console.error("Supabase user insert error:", error);
+    }
+
     res.status(200).json({
       message:
         "User registered. Please check your email for a verification code.",
@@ -119,22 +120,6 @@ app.post("/api/login", async (req, res) => {
         },
       })
     );
-    const userInDb = db
-      .prepare("SELECT * FROM users WHERE user_email = ?")
-      .get(email);
-    if (!userInDb) {
-      const { UserAttributes } = await cognitoClient.send(
-        new GetUserCommand({ AccessToken: AuthenticationResult.AccessToken })
-      );
-      const name =
-        UserAttributes.find((attr) => attr.Name === "name")?.Value ||
-        "Default User";
-      const sub = UserAttributes.find((attr) => attr.Name === "sub")?.Value;
-      if (sub)
-        db.prepare(
-          "INSERT INTO users (user_sub, user_name, user_email) VALUES (?, ?, ?)"
-        ).run(sub, name, email);
-    }
     res.status(200).json(AuthenticationResult);
   } catch (error) {
     console.error("Cognito InitiateAuth Error:", error);
@@ -142,7 +127,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// --- This router protects all API routes defined within it ---
 const apiRouter = express.Router();
 apiRouter.use(verifyToken);
 
@@ -151,6 +135,27 @@ apiRouter.get("/user", async (req, res) => {
     const { Username, UserAttributes } = await cognitoClient.send(
       new GetUserCommand({ AccessToken: req.token })
     );
+
+    const subAttribute = UserAttributes.find((attr) => attr.Name === "sub");
+
+    if (subAttribute) {
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("user_created_at")
+        .eq("user_sub", subAttribute.Value)
+        .single();
+
+      if (userError && userError.code !== "PGRST116") {
+        console.error("Failed to fetch user from Supabase:", userError);
+      } else {
+        return res.json({
+          Username,
+          UserAttributes,
+          user_created_at: userData ? userData.user_created_at : null,
+        });
+      }
+    }
+
     res.json({ Username, UserAttributes });
   } catch (error) {
     console.error("Failed to fetch user:", error);
@@ -167,7 +172,6 @@ apiRouter.put("/user/name", async (req, res) => {
   }
 
   try {
-    // Update in Cognito
     await cognitoClient.send(
       new UpdateUserAttributesCommand({
         AccessToken: req.token,
@@ -175,11 +179,12 @@ apiRouter.put("/user/name", async (req, res) => {
       })
     );
 
-    // Update in local DB
-    const stmt = db.prepare(
-      "UPDATE users SET user_name = ? WHERE user_sub = ?"
-    );
-    stmt.run(name, user_sub);
+    const { error } = await supabase
+      .from("users")
+      .update({ user_name: name })
+      .eq("user_sub", user_sub);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Name updated successfully." });
   } catch (error) {
@@ -188,41 +193,127 @@ apiRouter.put("/user/name", async (req, res) => {
   }
 });
 
-apiRouter.get("/my-referrals", (req, res) => {
+// --- NEW ROUTE for changing password ---
+apiRouter.put("/user/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "All password fields are required." });
+  }
+
+  try {
+    await cognitoClient.send(
+      new ChangePasswordCommand({
+        AccessToken: req.token, // Provided by the verifyToken middleware
+        PreviousPassword: currentPassword,
+        ProposedPassword: newPassword,
+      })
+    );
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Failed to change password:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to change password." });
+  }
+});
+
+apiRouter.get("/my-referrals", async (req, res) => {
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      `SELECT r.*, u.user_name FROM referrals r JOIN users u ON r.user_sub = u.user_sub WHERE r.user_sub = ? ORDER BY r.ref_created_at DESC`
-    );
-    res.json({ message: "success", data: stmt.all(user_sub) });
+    const { data, error } = await supabase
+      .from("referrals")
+      .select(
+        `ref_id, ref_name, ref_link, ref_desc, ref_category, ref_created_at, users (user_name)`
+      )
+      .eq("user_sub", user_sub)
+      .order("ref_created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ message: "success", data });
   } catch (error) {
     console.error("Failed to fetch user-specific referrals:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-apiRouter.get("/referrals", (req, res) => {
+// --- NEW SEARCH ENDPOINT ---
+apiRouter.get("/referrals/search", async (req, res) => {
+  const { q } = req.query;
+  if (!q) {
+    return res.status(400).json({ error: "Search query 'q' is required." });
+  }
+
   try {
-    const stmt = db.prepare(
-      `SELECT r.*, u.user_name FROM referrals r JOIN users u ON r.user_sub = u.user_sub ORDER BY r.ref_created_at DESC`
-    );
-    res.json({ message: "success", data: stmt.all() });
+    // Using .or() to search in both ref_name and ref_desc
+    // 'ilike' is for case-insensitive search
+    const { data, error } = await supabase
+      .from("referrals")
+      .select(`*, users (user_name)`)
+      .or(`ref_name.ilike.%${q}%,ref_desc.ilike.%${q}%`)
+      .order("ref_created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ message: "success", data });
+  } catch (error) {
+    console.error("Failed to search referrals:", error);
+    res.status(500).json({ error: "Database search error" });
+  }
+});
+
+apiRouter.get("/referrals", async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
+  // REMOVED: sortBy is no longer needed
+  const { category } = req.query;
+
+  try {
+    let query = supabase
+      .from("referrals")
+      .select(`*, users ( user_name )`, { count: "exact" });
+
+    // Apply category filter if it exists
+    if (category) {
+      query = query.eq("ref_category", category);
+    }
+
+    // Default sort by newest
+    query = query.order("ref_created_at", { ascending: false });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) throw error;
+    res.json({
+      message: "success",
+      data,
+      totalPages: Math.ceil(count / limit),
+    });
   } catch (error) {
     console.error("Failed to fetch referrals:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-apiRouter.get("/referrals/:id", (req, res) => {
+apiRouter.get("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      "SELECT * FROM referrals WHERE ref_id = ? AND user_sub = ?"
-    );
-    const referral = stmt.get(id, user_sub);
-    if (referral) {
-      res.json({ message: "success", data: referral });
+    const { data, error } = await supabase
+      .from("referrals")
+      .select("*")
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub)
+      .single();
+
+    if (error) throw error;
+
+    if (data) {
+      res.json({ message: "success", data });
     } else {
       res
         .status(404)
@@ -234,18 +325,68 @@ apiRouter.get("/referrals/:id", (req, res) => {
   }
 });
 
-apiRouter.post("/referrals", (req, res) => {
+apiRouter.post("/referrals", async (req, res) => {
   const { title, link, description, category } = req.body;
   if (!title || !link || !category)
     return res.status(400).json({ error: "Missing required fields" });
+
+  const { sub } = req.user;
+
   try {
-    const stmt = db.prepare(
-      "INSERT INTO referrals (user_sub, ref_name, ref_link, ref_desc, ref_category) VALUES (?, ?, ?, ?, ?)"
+    const { UserAttributes } = await cognitoClient.send(
+      new GetUserCommand({ AccessToken: req.token })
     );
-    const info = stmt.run(req.user.sub, title, link, description, category);
+
+    const nameAttribute = UserAttributes.find((attr) => attr.Name === "name");
+    const emailAttribute = UserAttributes.find((attr) => attr.Name === "email");
+
+    const name = nameAttribute ? nameAttribute.Value : "N/A";
+    const email = emailAttribute ? emailAttribute.Value : "N/A";
+
+    let { data: user, error: userError } = await supabase
+      .from("users")
+      .select("user_sub")
+      .eq("user_sub", sub)
+      .single();
+
+    if (userError && userError.code === "PGRST116") {
+      const { data: newUser, error: newUserError } = await supabase
+        .from("users")
+        .insert([
+          {
+            user_sub: sub,
+            user_name: name,
+            user_email: email,
+            user_created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+      if (newUserError) throw newUserError;
+      user = newUser;
+    } else if (userError) {
+      throw userError;
+    }
+
+    const { data, error } = await supabase
+      .from("referrals")
+      .insert([
+        {
+          user_sub: sub,
+          ref_name: title,
+          ref_link: link,
+          ref_desc: description,
+          ref_category: category,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
     res.status(201).json({
       message: "success",
-      data: { id: info.lastInsertRowid, ...req.body },
+      data: data,
     });
   } catch (error) {
     console.error("Failed to add referral:", error);
@@ -253,7 +394,7 @@ apiRouter.post("/referrals", (req, res) => {
   }
 });
 
-apiRouter.put("/referrals/:id", (req, res) => {
+apiRouter.put("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   const { title, link, description, category } = req.body;
@@ -263,14 +404,21 @@ apiRouter.put("/referrals/:id", (req, res) => {
   }
 
   try {
-    const stmt = db.prepare(
-      `UPDATE referrals 
-             SET ref_name = ?, ref_link = ?, ref_desc = ?, ref_category = ? 
-             WHERE ref_id = ? AND user_sub = ?`
-    );
-    const info = stmt.run(title, link, description, category, id, user_sub);
+    const { data, error } = await supabase
+      .from("referrals")
+      .update({
+        ref_name: title,
+        ref_link: link,
+        ref_desc: description,
+        ref_category: category,
+      })
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub)
+      .select();
 
-    if (info.changes > 0) {
+    if (error) throw error;
+
+    if (data && data.length > 0) {
       res.status(200).json({ message: "Referral updated successfully" });
     } else {
       res
@@ -283,15 +431,19 @@ apiRouter.put("/referrals/:id", (req, res) => {
   }
 });
 
-apiRouter.delete("/referrals/:id", (req, res) => {
+apiRouter.delete("/referrals/:id", async (req, res) => {
   const { id } = req.params;
   const { sub: user_sub } = req.user;
   try {
-    const stmt = db.prepare(
-      "DELETE FROM referrals WHERE ref_id = ? AND user_sub = ?"
-    );
-    const info = stmt.run(id, user_sub);
-    if (info.changes > 0) {
+    const { error, count } = await supabase
+      .from("referrals")
+      .delete({ count: "exact" })
+      .eq("ref_id", id)
+      .eq("user_sub", user_sub);
+
+    if (error) throw error;
+
+    if (count > 0) {
       res.status(200).json({ message: "Referral deleted successfully" });
     } else {
       res
@@ -304,12 +456,10 @@ apiRouter.delete("/referrals/:id", (req, res) => {
   }
 });
 
-// Apply the protected router to the /api path
 app.use("/api", apiRouter);
 
-// --- HTML Page Route (Catch-all) ---
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+app.get("/", (req, res) => {
+  res.send("refr.io backend is running!");
 });
 
 app.listen(PORT, () => {

@@ -11,6 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const userMenu = document.getElementById("user-menu");
   const searchInput = document.getElementById("search-input");
   const paginationControls = document.getElementById("pagination-controls");
+  // --- NEW: Get filter and sort dropdown elements ---
+  const filterCategory = document.getElementById("filter-category");
 
   const accessToken = localStorage.getItem("accessToken");
   let currentUser = null;
@@ -155,22 +157,59 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingMessage.textContent = "Please log in to see referrals.";
       return;
     }
-    paginationControls.style.display = "flex"; // Show pagination
+    paginationControls.style.display = "flex";
+    loadingMessage.style.display = "block";
+    referralsList.innerHTML = "";
+
+    const category = filterCategory.value;
+
+    const params = new URLSearchParams({
+      page: page,
+    });
+    if (category) {
+      params.append("category", category);
+    }
+
     try {
-      const response = await fetch(`${API_URL}/api/referrals?page=${page}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const response = await fetch(
+        `${API_URL}/api/referrals?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
       if (!response.ok) throw new Error("Network response was not ok");
       const result = await response.json();
 
       renderReferrals(result.data);
       totalPages = result.totalPages;
+      currentPage = page; // Update current page state
       updatePaginationControls();
     } catch (error) {
       console.error("Error fetching referrals:", error);
       loadingMessage.textContent = "Failed to load referrals.";
     }
   };
+
+  // --- NEW: Add event listeners for the dropdowns ---
+  filterCategory.addEventListener("change", () => {
+    fetchAndRenderReferrals(1); // Reset to page 1 when filter changes
+  });
+
+  // --- UPDATE searchInput listener to use filters ---
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query) {
+      searchTimeout = setTimeout(() => {
+        searchReferrals(query);
+      }, 300);
+    } else {
+      // If search is cleared, fetch with current filters
+      currentPage = 1;
+      fetchAndRenderReferrals(currentPage);
+    }
+  });
 
   const searchReferrals = async (query) => {
     if (!accessToken) return;

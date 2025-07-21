@@ -1,7 +1,6 @@
 // smasalia97/refr.io/refr.io-refr-frontend/refr-io/public/js/app.js
 document.addEventListener("DOMContentLoaded", () => {
   const referralsList = document.getElementById("referrals-list");
-  const loadingMessage = document.getElementById("loading-message");
   const welcomeMessage = document.getElementById("welcome-message");
   const postReferralLink = document.getElementById("post-referral-link");
   const loggedOutView = document.getElementById("logged-out-view");
@@ -11,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const userMenu = document.getElementById("user-menu");
   const searchInput = document.getElementById("search-input");
   const paginationControls = document.getElementById("pagination-controls");
-  // --- NEW: Get filter and sort dropdown elements ---
   const filterCategory = document.getElementById("filter-category");
 
   const accessToken = localStorage.getItem("accessToken");
@@ -64,11 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // In public/js/app.js
-
   const getCategoryClasses = (category) => {
     switch (category) {
-      // "Credit Card" case is removed
       case "Finance":
         return "bg-amber-100 text-amber-800";
       case "Food":
@@ -97,6 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const createReferralCard = (ref) => {
+    let displayCategory = ref.ref_category;
+    if (ref.ref_category === "Other" && ref.ref_category_other) {
+      displayCategory = ref.ref_category_other;
+    }
+    const categoryClasses = getCategoryClasses(ref.ref_category);
     const descriptionHTML = ref.ref_desc
       ? `<p class="text-sm text-gray-600 mt-1">${ref.ref_desc}</p>`
       : "";
@@ -112,29 +112,18 @@ document.addEventListener("DOMContentLoaded", () => {
           ${userNameHTML}
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4">
               <div class="flex-grow">
-                  <a href="${
-                    ref.ref_link
-                  }" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${
-      ref.ref_name
-    }</h2></a>
+                  <a href="${ref.ref_link}" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${ref.ref_name}</h2></a>
                   ${descriptionHTML}
               </div>
               <div class="w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4">
-                  <span class="${getCategoryClasses(
-                    ref.ref_category
-                  )} text-xs font-medium px-3 py-1 rounded-full">${
-      ref.ref_category
-    }</span>
-                  <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${
-                    ref.ref_link
-                  }">Copy Link</button>
+                  <span class="${categoryClasses} text-xs font-medium px-3 py-1 rounded-full">${displayCategory}</span>
+                  <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${ref.ref_link}">Copy Link</button>
               </div>
           </div>
       </div>`;
   };
 
   const renderReferrals = (referrals) => {
-    // This function will now clear the skeletons before rendering
     referralsList.innerHTML = "";
     if (referrals && referrals.length > 0) {
       referrals.forEach((ref) => {
@@ -154,18 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fetchAndRenderReferrals = async (page = 1) => {
     if (!accessToken) {
-      loadingMessage.textContent = "Please log in to see referrals.";
+      referralsList.innerHTML =
+        '<p class="text-gray-500 text-center">Please log in to see referrals.</p>';
       return;
     }
     paginationControls.style.display = "flex";
-    // loadingMessage.style.display = "block";
-    // referralsList.innerHTML = "";
 
     const category = filterCategory.value;
-
-    const params = new URLSearchParams({
-      page: page,
-    });
+    const params = new URLSearchParams({ page: page });
     if (category) {
       params.append("category", category);
     }
@@ -182,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       renderReferrals(result.data);
       totalPages = result.totalPages;
-      currentPage = page; // Update current page state
+      currentPage = page;
       updatePaginationControls();
     } catch (error) {
       console.error("Error fetching referrals:", error);
@@ -191,32 +176,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // --- NEW: Add event listeners for the dropdowns ---
-  filterCategory.addEventListener("change", () => {
-    fetchAndRenderReferrals(1); // Reset to page 1 when filter changes
-  });
-
-  // --- UPDATE searchInput listener to use filters ---
-  searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.trim();
-    clearTimeout(searchTimeout);
-
-    if (query) {
-      searchTimeout = setTimeout(() => {
-        searchReferrals(query);
-      }, 300);
-    } else {
-      // If search is cleared, fetch with current filters
-      currentPage = 1;
-      fetchAndRenderReferrals(currentPage);
-    }
-  });
-
   const searchReferrals = async (query) => {
     if (!accessToken) return;
-    loadingMessage.style.display = "block";
-    referralsList.innerHTML = "";
-    paginationControls.style.display = "none"; // Hide pagination during search
+    referralsList.innerHTML = ""; // This will clear the content and show the background skeletons
+    paginationControls.style.display = "none";
 
     try {
       const response = await fetch(
@@ -235,6 +198,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  filterCategory.addEventListener("change", () => {
+    fetchAndRenderReferrals(1);
+  });
+
   searchInput.addEventListener("input", (e) => {
     const query = e.target.value.trim();
     clearTimeout(searchTimeout);
@@ -242,9 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (query) {
       searchTimeout = setTimeout(() => {
         searchReferrals(query);
-      }, 300); // Debounce requests by 300ms
+      }, 300);
     } else {
-      // If search is cleared, fetch the first page of all referrals
       currentPage = 1;
       fetchAndRenderReferrals(currentPage);
     }
@@ -257,7 +223,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Link copied to clipboard!");
       });
     }
-    return;
   });
 
   if (logoutBtn)
@@ -297,8 +262,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser) {
       fetchAndRenderReferrals(currentPage);
     } else {
-      loadingMessage.textContent = "Please log in to see referrals.";
       paginationControls.style.display = "none";
+      referralsList.innerHTML =
+        '<p class="text-gray-500 text-center">Please log in to see referrals.</p>';
     }
   };
 

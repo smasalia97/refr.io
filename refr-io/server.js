@@ -12,6 +12,7 @@ const {
   ChangePasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
+const { signupValidationRules, validate } = require("./middleware/validators");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json());
+
+app.use(express.static("public"));
 
 // --- Supabase Client Setup ---
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -46,7 +49,7 @@ const calculateSecretHash = (username) => {
 
 // --- Public API Routes ---
 
-app.post("/api/signup", async (req, res) => {
+app.post("/api/signup", signupValidationRules(), validate, async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const { UserSub } = await cognitoClient.send(

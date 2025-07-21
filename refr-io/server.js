@@ -22,6 +22,7 @@ const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: [
     "https://www.refrio.org",
+    "https://refr-io.onrender.com",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
   ],

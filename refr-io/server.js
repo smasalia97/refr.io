@@ -329,29 +329,54 @@ apiRouter.get("/referrals/:id", async (req, res) => {
 });
 
 // --- NEW: Helper function to check URL with Google Safe Browse ---
+// smasalia97/refr.io/refr.io-refr-frontend/refr-io/server.js
+
 const isUrlSafe = async (url) => {
   const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
+
+  console.log("--- Starting URL Safety Check ---");
+  console.log("URL to check:", url);
+
   if (!apiKey) {
-    console.warn("Google Safe Browse API key not found. Skipping check.");
-    return true; // Fail open if the key is not configured
+    console.log("API Key is MISSING. Skipping check and allowing URL.");
+    return true;
   }
+  console.log("API Key found.");
+
   const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
 
   try {
+    console.log("Sending request to Google Safe Browse API...");
     const response = await axios.post(apiUrl, {
       client: { clientId: "refr-io", clientVersion: "1.0.0" },
       threatInfo: {
-        threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+        threatTypes: [
+          "MALWARE",
+          "SOCIAL_ENGINEERING",
+          "UNWANTED_SOFTWARE",
+          "POTENTIALLY_HARMFUL_APPLICATION",
+        ],
         platformTypes: ["ANY_PLATFORM"],
         threatEntryTypes: ["URL"],
         threatEntries: [{ url: url }],
       },
     });
-    // If the response body has a "matches" array, the URL is unsafe.
-    return !response.data.matches;
+    console.log("API Response received.");
+
+    if (response.data && response.data.matches) {
+      console.log("Result: Unsafe. Found matches:", response.data.matches);
+      return false;
+    } else {
+      console.log("Result: Safe. No matches found.");
+      return true;
+    }
   } catch (error) {
-    console.error("Error checking URL with Safe Browse API:", error.message);
-    return true; // Fail open (allow URL) in case of an API error
+    console.error(
+      "API Error:",
+      error.response ? error.response.data : error.message
+    );
+    console.log("Result: Failing open due to API error. Allowing URL.");
+    return true;
   }
 };
 
@@ -442,11 +467,9 @@ apiRouter.put("/referrals/:id", async (req, res) => {
 
   const isSafe = await isUrlSafe(link);
   if (!isSafe) {
-    return res
-      .status(400)
-      .json({
-        error: "This link is flagged as unsafe and cannot be submitted.",
-      });
+    return res.status(400).json({
+      error: "This link is flagged as unsafe and cannot be submitted.",
+    });
   }
 
   try {

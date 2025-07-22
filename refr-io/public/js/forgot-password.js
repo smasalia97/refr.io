@@ -8,8 +8,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const newPasswordInput = document.getElementById("new-password");
   const formTitle = document.getElementById("form-title");
   const formSubtitle = document.getElementById("form-subtitle");
+  const togglePasswordVisibility = document.getElementById(
+    "toggle-password-visibility"
+  );
+  const eyeIcon = document.getElementById("eye-icon");
+  const eyeSlashedIcon = document.getElementById("eye-slashed-icon");
 
   let userEmail = "";
+
+  if (togglePasswordVisibility) {
+    togglePasswordVisibility.addEventListener("click", () => {
+      if (newPasswordInput.type === "password") {
+        newPasswordInput.type = "text";
+        eyeIcon.classList.add("hidden");
+        eyeSlashedIcon.classList.remove("hidden");
+      } else {
+        newPasswordInput.type = "password";
+        eyeIcon.classList.remove("hidden");
+        eyeSlashedIcon.classList.add("hidden");
+      }
+    });
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -19,6 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // --- Step 2: Handle password reset ---
       const confirmationCode = codeInput.value;
       const newPassword = newPasswordInput.value;
+
+      if (!confirmationCode || !newPassword) {
+        showToast("Please fill out all fields.", "error");
+        return;
+      }
 
       try {
         const response = await fetch(`${API_URL}/api/confirm-password-reset`, {
@@ -61,6 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
         resetStep.classList.remove("hidden");
         formTitle.textContent = "Enter Your Reset Code";
         formSubtitle.textContent = `A code was sent to ${userEmail}.`;
+
+        emailInput.required = false;
+        codeInput.required = true;
+        newPasswordInput.required = true;
       } catch (error) {
         showToast(error.message, "error");
       }

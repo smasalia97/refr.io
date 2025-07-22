@@ -2,6 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const formMessage = document.getElementById("form-message");
   const passwordField = document.getElementById("password");
+  const loginButton = document.getElementById("login-btn");
+  const buttonText = document.getElementById("login-btn-text");
+  const spinner = document.getElementById("login-spinner");
+
   const togglePasswordVisibility = document.getElementById(
     "toggle-password-visibility"
   );
@@ -25,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      loginButton.disabled = true;
+      buttonText.classList.add("hidden");
+      spinner.classList.remove("hidden");
+
       formMessage.textContent = ""; // Clear previous messages
 
       const email = document.getElementById("email").value;
@@ -53,6 +61,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (error) {
         showToast(error.message, "error");
+      } finally {
+        // --- NEW: Restore button state regardless of outcome ---
+        loginButton.disabled = false;
+        buttonText.classList.remove("hidden");
+        spinner.classList.add("hidden");
       }
     });
   }

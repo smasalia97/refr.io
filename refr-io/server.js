@@ -21,13 +21,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Middleware & Static Files ---
+const allowedOrigins = [
+  "https://www.refrio.org",
+  "https://refr-io.onrender.com",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+];
+
 const corsOptions = {
-  origin: [
-    "https://www.refrio.org",
-    "https://refr-io.onrender.com",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-  ],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
 };
 app.use(cors(corsOptions));
 app.use(express.json());

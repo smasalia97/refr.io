@@ -1,4 +1,3 @@
-// smasalia97/refr.io/refr.io-refr-frontend/refr-io/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");

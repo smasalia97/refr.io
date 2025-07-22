@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       loginButton.disabled = true;
-      buttonText.classList.add("hidden");
       spinner.classList.remove("hidden");
+      buttonText.textContent = "Logging In...";
 
       formMessage.textContent = ""; // Clear previous messages
 
@@ -64,8 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } finally {
         // --- NEW: Restore button state regardless of outcome ---
         loginButton.disabled = false;
-        buttonText.classList.remove("hidden");
         spinner.classList.add("hidden");
+        buttonText.textContent = "Log In";
       }
     });
   }

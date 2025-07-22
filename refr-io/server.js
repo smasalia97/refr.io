@@ -11,6 +11,8 @@ const {
   GetUserCommand,
   UpdateUserAttributesCommand,
   ChangePasswordCommand,
+  ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
 const { signupValidationRules, validate } = require("./middleware/validators");
@@ -127,6 +129,48 @@ app.post("/api/login", async (req, res) => {
   } catch (error) {
     console.error("Cognito InitiateAuth Error:", error);
     res.status(400).json({ error: error.message || "Login failed" });
+  }
+});
+
+app.post("/api/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  try {
+    await cognitoClient.send(
+      new ForgotPasswordCommand({
+        ClientId: process.env.COGNITO_CLIENT_ID,
+        Username: email,
+        SecretHash: calculateSecretHash(email),
+      })
+    );
+    res
+      .status(200)
+      .json({ message: "Password reset code sent to your email." });
+  } catch (error) {
+    console.error("Cognito ForgotPassword Error:", error);
+    res
+      .status(400)
+      .json({ error: error.message || "Failed to initiate password reset." });
+  }
+});
+
+app.post("/api/confirm-password-reset", async (req, res) => {
+  const { email, confirmationCode, newPassword } = req.body;
+  try {
+    await cognitoClient.send(
+      new ConfirmForgotPasswordCommand({
+        ClientId: process.env.COGNITO_CLIENT_ID,
+        Username: email,
+        ConfirmationCode: confirmationCode,
+        Password: newPassword,
+        SecretHash: calculateSecretHash(email),
+      })
+    );
+    res.status(200).json({ message: "Password has been reset successfully." });
+  } catch (error) {
+    console.error("Cognito ConfirmForgotPassword Error:", error);
+    res
+      .status(400)
+      .json({ error: error.message || "Failed to reset password." });
   }
 });
 
@@ -331,47 +375,55 @@ apiRouter.get("/referrals/:id", async (req, res) => {
 // --- NEW: Helper function to check URL with Google Safe Browse ---
 
 const isUrlSafe = async (url) => {
-    const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
-    
-    console.log("--- Starting URL Safety Check ---");
-    console.log("URL to check:", url);
+  const apiKey = process.env.GOOGLE_SAFE_Browse_API_KEY;
 
-    if (!apiKey) {
-        console.log("API Key is MISSING. Skipping check and allowing URL.");
-        return true;
+  console.log("--- Starting URL Safety Check ---");
+  console.log("URL to check:", url);
+
+  if (!apiKey) {
+    console.log("API Key is MISSING. Skipping check and allowing URL.");
+    return true;
+  }
+  console.log("API Key found.");
+
+  // --- THIS IS THE CORRECTED LINE ---
+  const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+
+  console.log("Attempting to call API at:", apiUrl);
+
+  try {
+    console.log("Sending request to Google Safe Browse API...");
+    const response = await axios.post(apiUrl, {
+      client: { clientId: "refr-io", clientVersion: "1.0.0" },
+      threatInfo: {
+        threatTypes: [
+          "MALWARE",
+          "SOCIAL_ENGINEERING",
+          "UNWANTED_SOFTWARE",
+          "POTENTIALLY_HARMFUL_APPLICATION",
+        ],
+        platformTypes: ["ANY_PLATFORM"],
+        threatEntryTypes: ["URL"],
+        threatEntries: [{ url: url }],
+      },
+    });
+    console.log("API Response received.");
+
+    if (response.data && response.data.matches) {
+      console.log("Result: Unsafe. Found matches:", response.data.matches);
+      return false;
+    } else {
+      console.log("Result: Safe. No matches found.");
+      return true;
     }
-    console.log("API Key found.");
-
-    // --- THIS IS THE CORRECTED LINE ---
-    const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
-    
-    console.log("Attempting to call API at:", apiUrl);
-
-    try {
-        console.log("Sending request to Google Safe Browse API...");
-        const response = await axios.post(apiUrl, {
-            client: { clientId: "refr-io", clientVersion: "1.0.0" },
-            threatInfo: {
-                threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-                platformTypes: ["ANY_PLATFORM"],
-                threatEntryTypes: ["URL"],
-                threatEntries: [{ url: url }]
-            }
-        });
-        console.log("API Response received.");
-
-        if (response.data && response.data.matches) {
-            console.log("Result: Unsafe. Found matches:", response.data.matches);
-            return false;
-        } else {
-            console.log("Result: Safe. No matches found.");
-            return true;
-        }
-    } catch (error) {
-        console.error("API Error:", error.response ? error.response.data : error.message);
-        console.log("Result: Failing open due to API error. Allowing URL.");
-        return true; 
-    }
+  } catch (error) {
+    console.error(
+      "API Error:",
+      error.response ? error.response.data : error.message
+    );
+    console.log("Result: Failing open due to API error. Allowing URL.");
+    return true;
+  }
 };
 
 apiRouter.post("/referrals", async (req, res) => {

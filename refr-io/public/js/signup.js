@@ -10,14 +10,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordField = document.getElementById("password");
   const confirmPasswordField = document.getElementById("confirm-password");
   const confirmationCodeField = document.getElementById("confirmation-code");
-  const showPasswordCheckbox = document.getElementById("show-password");
+
+  const togglePasswordBtn = document.getElementById(
+    "toggle-password-visibility"
+  );
+  const eyeIcon = document.getElementById("eye-icon");
+  const eyeSlashedIcon = document.getElementById("eye-slashed-icon");
+
+  // --- FIX: Added the missing variable declarations ---
+  const toggleConfirmPasswordBtn = document.getElementById(
+    "toggle-confirm-password-visibility"
+  );
+  const confirmEyeIcon = document.getElementById("confirm-eye-icon");
+  const confirmEyeSlashedIcon = document.getElementById(
+    "confirm-eye-slashed-icon"
+  );
 
   const signupBtn = document.getElementById("signup-btn");
   const confirmBtn = document.getElementById("confirm-btn");
   const formTitle = document.getElementById("form-title");
   const formSubtitle = document.getElementById("form-subtitle");
 
-  // --- NEW: Password criteria elements ---
   const criteriaContainer = document.getElementById(
     "password-criteria-container"
   );
@@ -28,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let userEmail = "";
 
-  // --- NEW: Password validation logic ---
   const validatePassword = () => {
     const value = passwordField.value;
     const checks = {
@@ -60,13 +72,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   passwordField.addEventListener("input", validatePassword);
 
-  if (showPasswordCheckbox) {
-    showPasswordCheckbox.addEventListener("change", () => {
-      const isChecked = showPasswordCheckbox.checked;
-      passwordField.type = isChecked ? "text" : "password";
-      confirmPasswordField.type = isChecked ? "text" : "password";
-    });
-  }
+  const setupPasswordToggle = (button, field, openIcon, closedIcon) => {
+    if (button) {
+      button.addEventListener("click", () => {
+        if (field.type === "password") {
+          field.type = "text";
+          openIcon.classList.add("hidden");
+          closedIcon.classList.remove("hidden");
+        } else {
+          field.type = "password";
+          openIcon.classList.remove("hidden");
+          closedIcon.classList.add("hidden");
+        }
+      });
+    }
+  };
+
+  setupPasswordToggle(
+    togglePasswordBtn,
+    passwordField,
+    eyeIcon,
+    eyeSlashedIcon
+  );
+  // --- FIX: The function call now uses the correct variables ---
+  setupPasswordToggle(
+    toggleConfirmPasswordBtn,
+    confirmPasswordField,
+    confirmEyeIcon,
+    confirmEyeSlashedIcon
+  );
 
   signupBtn.addEventListener("click", async (event) => {
     event.preventDefault();
@@ -78,21 +112,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmPassword = confirmPasswordField.value;
 
     if (!name || !email || !password || !confirmPassword) {
-      formMessage.textContent = "Please fill out all fields.";
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast("Please fill out all fields.", "error");
       return;
     }
 
-    // --- NEW: Check if password is valid before submitting ---
     if (!validatePassword()) {
-      formMessage.textContent = "Password does not meet all the criteria.";
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast("Password does not meet all the criteria.", "error");
       return;
     }
 
     if (password !== confirmPassword) {
-      formMessage.textContent = "Passwords do not match.";
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast("Passwords do not match.", "error");
       return;
     }
 
@@ -121,13 +151,12 @@ document.addEventListener("DOMContentLoaded", () => {
         confirmationFields.classList.remove("hidden");
         confirmBtn.classList.remove("hidden");
 
-        formMessage.textContent = result.message;
-        formMessage.className = "text-green-600 text-center mt-4";
+        showToast("Confirmation code sent to your email!");
       } else {
         throw new Error(result.error || "Signup failed");
       }
     } catch (error) {
-      showToast(error.message, 'error');
+      showToast(error.message, "error");
     }
   });
 
@@ -136,8 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmationCode = confirmationCodeField.value;
 
     if (!confirmationCode) {
-      formMessage.textContent = "Please enter your confirmation code.";
-      formMessage.className = "text-red-600 text-center mt-4";
+      showToast("Please enter your confirmation code.", "error");
       return;
     }
 
@@ -154,8 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        formMessage.textContent = "Success! Redirecting you to login...";
-        formMessage.className = "text-green-600 text-center mt-4";
+        showToast("Success! Redirecting you to login...");
 
         setTimeout(() => {
           window.location.href = "/login.html";
@@ -164,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(result.error || "Confirmation failed.");
       }
     } catch (error) {
-      showToast(error.message, 'error');
+      showToast(error.message, "error");
     }
   });
 });

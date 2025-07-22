@@ -387,7 +387,7 @@ const isUrlSafe = async (url) => {
   console.log("API Key found.");
 
   // --- THIS IS THE CORRECTED LINE ---
-  const apiUrl = `https://safeBrowse.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+  const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
 
   console.log("Attempting to call API at:", apiUrl);
 

@@ -68,9 +68,29 @@
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" name="password" id="password" autocomplete="new-password"
-                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
-                            required>
+                        <div class="relative">
+                            <input type="password" name="password" id="password" autocomplete="new-password"
+                                class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
+                                required>
+                            <button type="button" id="toggle-password-visibility"
+                                class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">
+                                <svg id="eye-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd"
+                                        d="M.458 10C1.73 5.943 5.522 3 10 3s8.27 2.943 9.542 7c-1.272 4.057-5.022 7-9.542 7S1.73 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <svg id="eye-slashed-icon" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.27 5.943 14.478 3 10 3a9.953 9.953 0 00-4.512 1.074L3.707 2.293zM10 12a2 2 0 100-4 2 2 0 000 4z"
+                                        clip-rule="evenodd" />
+                                    <path
+                                        d="M2 10s3.939-5.291 8-5.291 8 5.291 8 5.291-3.939 5.291-8 5.291S2 10 2 10z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div id="password-criteria-container" class="hidden">
                         <ul class="text-sm text-gray-500 space-y-1 mt-2 password-criteria">
@@ -83,9 +103,30 @@
                     <div>
                         <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm
                             Password</label>
-                        <input type="password" name="confirm-password" id="confirm-password" autocomplete="new-password"
-                            class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
-                            required>
+                        <div class="relative">
+                            <input type="password" name="confirm-password" id="confirm-password"
+                                autocomplete="new-password"
+                                class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent sm:text-sm min-h-[40px] transition duration-200 ease-in-out"
+                                required>
+                            <button type="button" id="toggle-confirm-password-visibility"
+                                class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">
+                                <svg id="confirm-eye-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd"
+                                        d="M.458 10C1.73 5.943 5.522 3 10 3s8.27 2.943 9.542 7c-1.272 4.057-5.022 7-9.542 7S1.73 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <svg id="confirm-eye-slashed-icon" class="h-5 w-5 hidden"
+                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.27 5.943 14.478 3 10 3a9.953 9.953 0 00-4.512 1.074L3.707 2.293zM10 12a2 2 0 100-4 2 2 0 000 4z"
+                                        clip-rule="evenodd" />
+                                    <path
+                                        d="M2 10s3.939-5.291 8-5.291 8 5.291 8 5.291-3.939 5.291-8 5.291S2 10 2 10z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="flex items-center mt-1 mb-2">
                         <input id="show-password" name="show-password" type="checkbox"

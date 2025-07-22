@@ -2,11 +2,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const formMessage = document.getElementById("form-message");
   const passwordField = document.getElementById("password");
-  const showPasswordCheckbox = document.getElementById("show-password");
+  const togglePasswordVisibility = document.getElementById(
+    "toggle-password-visibility"
+  );
+  const eyeIcon = document.getElementById("eye-icon");
+  const eyeSlashedIcon = document.getElementById("eye-slashed-icon");
 
-  if (showPasswordCheckbox) {
-    showPasswordCheckbox.addEventListener("change", () => {
-      passwordField.type = showPasswordCheckbox.checked ? "text" : "password";
+  if (togglePasswordVisibility) {
+    togglePasswordVisibility.addEventListener("click", () => {
+      if (passwordField.type === "password") {
+        passwordField.type = "text";
+        eyeIcon.classList.add("hidden");
+        eyeSlashedIcon.classList.remove("hidden");
+      } else {
+        passwordField.type = "password";
+        eyeIcon.classList.remove("hidden");
+        eyeSlashedIcon.classList.add("hidden");
+      }
     });
   }
 

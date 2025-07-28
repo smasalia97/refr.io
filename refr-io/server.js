@@ -2,6 +2,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet"); // Import helmet
+const rateLimit = require("express-rate-limit"); // Import rate-limit
 const { createClient } = require("@supabase/supabase-js");
 const {
   CognitoIdentityProviderClient,
@@ -15,19 +17,35 @@ const {
   ConfirmForgotPasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const verifyToken = require("./middleware/auth-middleware");
-const { signupValidationRules, validate } = require("./middleware/validators");
+const {
+  signupValidationRules,
+  referralValidationRules,
+  validate,
+} = require("./middleware/validators");
 const axios = require("axios");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Apply Helmet for security headers
+app.use(helmet());
+
+// Apply rate limiting to all API requests
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api", limiter);
+
 // --- Middleware & Static Files ---
 const corsOptions = {
   origin: [
     "https://www.refrio.org",
-    "https://refr-io.onrender.com",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
+    // "https://refr-io.onrender.com",
+    // "http://localhost:8080",
+    // "http://127.0.0.1:8080",
   ],
 };
 app.use(cors(corsOptions));
@@ -308,43 +326,47 @@ apiRouter.get("/referrals/search", async (req, res) => {
   }
 });
 
-apiRouter.get("/referrals", async (req, res) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = 10;
-  const offset = (page - 1) * limit;
+apiRouter.get(
+  "/referrals",
 
-  // REMOVED: sortBy is no longer needed
-  const { category } = req.query;
+  async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
 
-  try {
-    let query = supabase
-      .from("referrals")
-      .select(`*, users ( user_name )`, { count: "exact" });
+    // REMOVED: sortBy is no longer needed
+    const { category } = req.query;
 
-    // Apply category filter if it exists
-    if (category) {
-      query = query.eq("ref_category", category);
+    try {
+      let query = supabase
+        .from("referrals")
+        .select(`*, users ( user_name )`, { count: "exact" });
+
+      // Apply category filter if it exists
+      if (category) {
+        query = query.eq("ref_category", category);
+      }
+
+      // Default sort by newest
+      query = query.order("ref_created_at", { ascending: false });
+
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+      res.json({
+        message: "success",
+        data,
+        totalPages: Math.ceil(count / limit),
+      });
+    } catch (error) {
+      console.error("Failed to fetch referrals:", error);
+      res.status(500).json({ error: "Database error" });
     }
-
-    // Default sort by newest
-    query = query.order("ref_created_at", { ascending: false });
-
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
-
-    const { data, error, count } = await query;
-
-    if (error) throw error;
-    res.json({
-      message: "success",
-      data,
-      totalPages: Math.ceil(count / limit),
-    });
-  } catch (error) {
-    console.error("Failed to fetch referrals:", error);
-    res.status(500).json({ error: "Database error" });
   }
-});
+);
 
 apiRouter.get("/referrals/:id", async (req, res) => {
   const { id } = req.params;
@@ -426,125 +448,137 @@ const isUrlSafe = async (url) => {
   }
 };
 
-apiRouter.post("/referrals", async (req, res) => {
-  const { title, link, description, category } = req.body;
-  if (!title || !link || !category)
-    return res.status(400).json({ error: "Missing required fields" });
+apiRouter.post(
+  "/referrals",
+  referralValidationRules(),
+  validate,
+  async (req, res) => {
+    const { title, link, description, category } = req.body;
+    if (!title || !link || !category)
+      return res.status(400).json({ error: "Missing required fields" });
 
-  const isSafe = await isUrlSafe(link);
-  if (!isSafe) {
-    return res.status(400).json({
-      error: "This link is flagged as unsafe and cannot be submitted.",
-    });
-  }
+    const isSafe = await isUrlSafe(link);
+    if (!isSafe) {
+      return res.status(400).json({
+        error: "This link is flagged as unsafe and cannot be submitted.",
+      });
+    }
 
-  const { sub } = req.user;
+    const { sub } = req.user;
 
-  try {
-    const { UserAttributes } = await cognitoClient.send(
-      new GetUserCommand({ AccessToken: req.token })
-    );
+    try {
+      const { UserAttributes } = await cognitoClient.send(
+        new GetUserCommand({ AccessToken: req.token })
+      );
 
-    const nameAttribute = UserAttributes.find((attr) => attr.Name === "name");
-    const emailAttribute = UserAttributes.find((attr) => attr.Name === "email");
+      const nameAttribute = UserAttributes.find((attr) => attr.Name === "name");
+      const emailAttribute = UserAttributes.find(
+        (attr) => attr.Name === "email"
+      );
 
-    const name = nameAttribute ? nameAttribute.Value : "N/A";
-    const email = emailAttribute ? emailAttribute.Value : "N/A";
+      const name = nameAttribute ? nameAttribute.Value : "N/A";
+      const email = emailAttribute ? emailAttribute.Value : "N/A";
 
-    let { data: user, error: userError } = await supabase
-      .from("users")
-      .select("user_sub")
-      .eq("user_sub", sub)
-      .single();
-
-    if (userError && userError.code === "PGRST116") {
-      const { data: newUser, error: newUserError } = await supabase
+      let { data: user, error: userError } = await supabase
         .from("users")
+        .select("user_sub")
+        .eq("user_sub", sub)
+        .single();
+
+      if (userError && userError.code === "PGRST116") {
+        const { data: newUser, error: newUserError } = await supabase
+          .from("users")
+          .insert([
+            {
+              user_sub: sub,
+              user_name: name,
+              user_email: email,
+              user_created_at: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
+        if (newUserError) throw newUserError;
+        user = newUser;
+      } else if (userError) {
+        throw userError;
+      }
+
+      const { data, error } = await supabase
+        .from("referrals")
         .insert([
           {
             user_sub: sub,
-            user_name: name,
-            user_email: email,
-            user_created_at: new Date().toISOString(),
+            ref_name: title,
+            ref_link: link,
+            ref_desc: description,
+            ref_category: category,
           },
         ])
         .select()
         .single();
-      if (newUserError) throw newUserError;
-      user = newUser;
-    } else if (userError) {
-      throw userError;
+
+      if (error) throw error;
+
+      res.status(201).json({
+        message: "success",
+        data: data,
+      });
+    } catch (error) {
+      console.error("Failed to add referral:", error);
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+apiRouter.put(
+  "/referrals/:id",
+  referralValidationRules(),
+  validate,
+  async (req, res) => {
+    const { id } = req.params;
+    const { sub: user_sub } = req.user;
+    const { title, link, description, category } = req.body;
+
+    if (!title || !link || !category) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { data, error } = await supabase
-      .from("referrals")
-      .insert([
-        {
-          user_sub: sub,
+    const isSafe = await isUrlSafe(link);
+    if (!isSafe) {
+      return res.status(400).json({
+        error: "This link is flagged as unsafe and cannot be submitted.",
+      });
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("referrals")
+        .update({
           ref_name: title,
           ref_link: link,
           ref_desc: description,
           ref_category: category,
-        },
-      ])
-      .select()
-      .single();
+        })
+        .eq("ref_id", id)
+        .eq("user_sub", user_sub)
+        .select();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    res.status(201).json({
-      message: "success",
-      data: data,
-    });
-  } catch (error) {
-    console.error("Failed to add referral:", error);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-apiRouter.put("/referrals/:id", async (req, res) => {
-  const { id } = req.params;
-  const { sub: user_sub } = req.user;
-  const { title, link, description, category } = req.body;
-
-  if (!title || !link || !category) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  const isSafe = await isUrlSafe(link);
-  if (!isSafe) {
-    return res.status(400).json({
-      error: "This link is flagged as unsafe and cannot be submitted.",
-    });
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("referrals")
-      .update({
-        ref_name: title,
-        ref_link: link,
-        ref_desc: description,
-        ref_category: category,
-      })
-      .eq("ref_id", id)
-      .eq("user_sub", user_sub)
-      .select();
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      res.status(200).json({ message: "Referral updated successfully" });
-    } else {
-      res
-        .status(404)
-        .json({ error: "Referral not found or permission denied." });
+      if (data && data.length > 0) {
+        res.status(200).json({ message: "Referral updated successfully" });
+      } else {
+        res
+          .status(404)
+          .json({ error: "Referral not found or permission denied." });
+      }
+    } catch (error) {
+      console.error(`Failed to update referral:`, error);
+      res.status(500).json({ error: "Database error" });
     }
-  } catch (error) {
-    console.error(`Failed to update referral:`, error);
-    res.status(500).json({ error: "Database error" });
   }
-});
+);
 
 apiRouter.delete("/referrals/:id", async (req, res) => {
   const { id } = req.params;

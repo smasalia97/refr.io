@@ -39,7 +39,30 @@ const signupValidationRules = () => {
   ];
 };
 
+const referralValidationRules = () => {
+  return [
+    body("title").notEmpty().withMessage("Title is required.").trim().escape(),
+    body("link").isURL().withMessage("A valid URL is required."),
+    body("description").optional().trim().escape(),
+    body("category")
+      .notEmpty()
+      .withMessage("Category is required.")
+      .isIn([
+        "Finance",
+        "Food",
+        "Shopping",
+        "Travel",
+        "Services",
+        "Software",
+        "Gaming",
+        "Other",
+      ])
+      .withMessage("Invalid category."),
+  ];
+};
+
 module.exports = {
   signupValidationRules,
+  referralValidationRules, // Export the new rules
   validate,
 };

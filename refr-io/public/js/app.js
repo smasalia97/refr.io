@@ -92,42 +92,80 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const createReferralCard = (ref) => {
+    const card = document.createElement("div");
+    card.className =
+      "referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm";
+
     let displayCategory = ref.ref_category;
     if (ref.ref_category === "Other" && ref.ref_category_other) {
       displayCategory = ref.ref_category_other;
     }
     const categoryClasses = getCategoryClasses(ref.ref_category);
-    const descriptionHTML = ref.ref_desc
-      ? `<p class="text-sm text-gray-600 mt-1">${ref.ref_desc}</p>`
-      : "";
-    const userNameHTML =
-      ref.users && ref.users.user_name
-        ? `<div class="text-sm font-semibold text-gray-800 mb-2">${capitalizeName(
-            ref.users.user_name
-          )}</div>`
-        : "";
 
-    return `
-      <div class="referral-card bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm">
-          ${userNameHTML}
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4">
-              <div class="flex-grow">
-                  <a href="${ref.ref_link}" target="_blank"><h2 class="text-lg font-semibold text-brand-green hover:underline">${ref.ref_name}</h2></a>
-                  ${descriptionHTML}
-              </div>
-              <div class="w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4">
-                  <span class="${categoryClasses} text-xs font-medium px-3 py-1 rounded-full">${displayCategory}</span>
-                  <button class="copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg" data-link="${ref.ref_link}">Copy Link</button>
-              </div>
-          </div>
-      </div>`;
+    // Create and append user name if it exists
+    if (ref.users && ref.users.user_name) {
+      const userNameDiv = document.createElement("div");
+      userNameDiv.className = "text-sm font-semibold text-gray-800 mb-2";
+      userNameDiv.textContent = capitalizeName(ref.users.user_name);
+      card.appendChild(userNameDiv);
+    }
+
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className =
+      "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-3 gap-x-4";
+
+    const textWrapper = document.createElement("div");
+    textWrapper.className = "flex-grow";
+
+    const titleLink = document.createElement("a");
+    titleLink.href = ref.ref_link;
+    titleLink.target = "_blank";
+    const titleHeader = document.createElement("h2");
+    titleHeader.className =
+      "text-lg font-semibold text-brand-green hover:underline";
+    // Safely set the referral name as text content
+    titleHeader.textContent = ref.ref_name;
+    titleLink.appendChild(titleHeader);
+    textWrapper.appendChild(titleLink);
+
+    // Create and append description if it exists
+    if (ref.ref_desc) {
+      const descriptionP = document.createElement("p");
+      descriptionP.className = "text-sm text-gray-600 mt-1";
+      // Safely set the description as text content
+      descriptionP.textContent = ref.ref_desc;
+      textWrapper.appendChild(descriptionP);
+    }
+
+    const controlsWrapper = document.createElement("div");
+    controlsWrapper.className =
+      "w-full sm:w-auto flex-shrink-0 flex items-center justify-between sm:justify-end gap-4";
+
+    const categorySpan = document.createElement("span");
+    categorySpan.className = `${categoryClasses} text-xs font-medium px-3 py-1 rounded-full`;
+    categorySpan.textContent = displayCategory;
+
+    const copyButton = document.createElement("button");
+    copyButton.className =
+      "copy-link-btn bg-slate-100 text-gray-700 font-semibold px-4 py-2 rounded-lg";
+    copyButton.dataset.link = ref.ref_link;
+    copyButton.textContent = "Copy Link";
+
+    controlsWrapper.appendChild(categorySpan);
+    controlsWrapper.appendChild(copyButton);
+
+    contentWrapper.appendChild(textWrapper);
+    contentWrapper.appendChild(controlsWrapper);
+    card.appendChild(contentWrapper);
+
+    return card;
   };
 
   const renderReferrals = (referrals) => {
     referralsList.innerHTML = "";
     if (referrals && referrals.length > 0) {
       referrals.forEach((ref) => {
-        referralsList.insertAdjacentHTML("beforeend", createReferralCard(ref));
+        referralsList.appendChild(createReferralCard(ref)); // Append the element, not HTML string
       });
     } else {
       referralsList.innerHTML =
